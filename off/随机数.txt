@@ -1,0 +1,4 @@
+生成随机数组最重要的函数
+random.sample
+定义 这个数组内的字符，
+使字符随机生成[random.sample(s,num)]并拼接到一起[''.join(list)]。
