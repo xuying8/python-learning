@@ -1,8 +1,9 @@
 """
-Douyin live-status checker.
+Douyin live-status checker + stream URL extractor.
 
-Polls live.douyin.com to detect when a user goes live and extracts the
-room metadata (room_id, uid, title, owner) needed for WebSocket connection.
+Polls live.douyin.com to detect when a user goes live and extracts:
+  - room metadata (room_id, title, owner)
+  - CDN stream URLs (HLS m3u8 preferred, FLV fallback)
 """
 import asyncio
 import json
@@ -26,6 +27,8 @@ _HEADERS = {
     "Referer": "https://live.douyin.com/",
 }
 
+_QUALITY_PREF = ["FULL_HD1", "HD1", "SD1", "SD2", "LD"]
+
 
 @dataclass
 class LiveInfo:
@@ -34,7 +37,19 @@ class LiveInfo:
     title: str
     owner: str
     uid: str
-    status: int  # 2 = live, 4 = offline
+    status: int                         # 2 = live, 4 = offline
+    hls_urls: dict = field(default_factory=dict)  # quality -> m3u8 url
+    flv_urls: dict = field(default_factory=dict)  # quality -> flv url
+
+    def best_stream_url(self) -> str:
+        """Return the best available stream URL (HLS preferred)."""
+        for quality in _QUALITY_PREF:
+            if quality in self.hls_urls:
+                return self.hls_urls[quality]
+        for quality in _QUALITY_PREF:
+            if quality in self.flv_urls:
+                return self.flv_urls[quality]
+        return ""
 
     def __str__(self) -> str:
         state = "直播中" if self.is_live else "未开播"
@@ -53,12 +68,35 @@ def _parse_cookies(cookie_str: str) -> dict:
     return out
 
 
+def _pick_stream_urls(stream_url_obj: dict) -> tuple[dict, dict]:
+    """Extract HLS and FLV URL dicts from the room stream_url object."""
+    hls: dict = {}
+    flv: dict = {}
+    if not stream_url_obj:
+        return hls, flv
+
+    # HLS
+    hls_map = stream_url_obj.get("hls_pull_url_map") or {}
+    hls_single = stream_url_obj.get("hls_pull_url") or ""
+    if hls_map:
+        hls = {k: v for k, v in hls_map.items() if v}
+    elif hls_single:
+        hls = {"HD1": hls_single}
+
+    # FLV
+    flv_map = stream_url_obj.get("flv_pull_url") or {}
+    if isinstance(flv_map, dict):
+        flv = {k: v for k, v in flv_map.items() if v}
+    elif isinstance(flv_map, str) and flv_map:
+        flv = {"HD1": flv_map}
+
+    return hls, flv
+
+
 def _extract_render_data(html: str) -> LiveInfo | None:
-    """Parse window.__RENDER_DATA__ from Douyin live page HTML."""
     match = re.search(
         r"window\.__RENDER_DATA__\s*=\s*decodeURIComponent\(\"(.+?)\"\)",
-        html,
-        re.DOTALL,
+        html, re.DOTALL,
     )
     if not match:
         return None
@@ -67,9 +105,8 @@ def _extract_render_data(html: str) -> LiveInfo | None:
         data = json.loads(raw)
         initial = data["app"]["initialState"]
         room = initial["roomStore"]["roomInfo"]["room"]
-        uid = str(
-            initial.get("userStore", {}).get("odin", {}).get("user_id", "")
-        )
+        uid = str(initial.get("userStore", {}).get("odin", {}).get("user_id", ""))
+        hls, flv = _pick_stream_urls(room.get("stream_url", {}))
         return LiveInfo(
             room_id=str(room.get("id_str") or room.get("id", "")),
             is_live=(room.get("status") == 2),
@@ -77,13 +114,14 @@ def _extract_render_data(html: str) -> LiveInfo | None:
             owner=room.get("owner", {}).get("nickname", ""),
             uid=uid,
             status=room.get("status", 4),
+            hls_urls=hls,
+            flv_urls=flv,
         )
     except (KeyError, TypeError, json.JSONDecodeError):
         return None
 
 
 def _extract_next_data(html: str) -> LiveInfo | None:
-    """Parse __NEXT_DATA__ as fallback."""
     match = re.search(
         r'<script id="__NEXT_DATA__"[^>]*>(.+?)</script>', html, re.DOTALL
     )
@@ -92,13 +130,12 @@ def _extract_next_data(html: str) -> LiveInfo | None:
     try:
         data = json.loads(match.group(1))
         rooms = (
-            data["props"]["pageProps"]
-            .get("roomInfoRes", {})
-            .get("data", [])
+            data["props"]["pageProps"].get("roomInfoRes", {}).get("data", [])
         )
         if not rooms:
             return None
         room = rooms[0].get("room", {})
+        hls, flv = _pick_stream_urls(room.get("stream_url", {}))
         return LiveInfo(
             room_id=str(room.get("id_str") or room.get("id", "")),
             is_live=(room.get("status") == 2),
@@ -106,6 +143,8 @@ def _extract_next_data(html: str) -> LiveInfo | None:
             owner=room.get("owner", {}).get("nickname", ""),
             uid="",
             status=room.get("status", 4),
+            hls_urls=hls,
+            flv_urls=flv,
         )
     except (KeyError, TypeError, json.JSONDecodeError):
         return None
@@ -131,12 +170,12 @@ class DouyinChecker:
                 resp = await client.get(url)
                 resp.raise_for_status()
         except httpx.HTTPError as e:
-            logger.warning("HTTP error fetching room info for %s: %s", user_id, e)
+            logger.warning("HTTP error for %s: %s", user_id, e)
             return None
 
         info = _extract_render_data(resp.text) or _extract_next_data(resp.text)
         if info is None:
-            logger.warning("Could not parse room info from page (user_id=%s)", user_id)
+            logger.warning("Could not parse room info (user_id=%s)", user_id)
         return info
 
     async def watch(
@@ -147,13 +186,11 @@ class DouyinChecker:
         interval: int = 60,
     ) -> None:
         """
-        Poll forever, calling on_live_start(info) when the stream starts and
-        on_live_end() when it ends.  on_live_start is awaited (blocks the loop
-        while the stream is running), so polling resumes after the stream ends.
+        Poll until live starts, await on_live_start(info) (blocks while stream
+        runs), then resume polling.
         """
         was_live = False
         logger.info("Watching %s every %ds", user_id, interval)
-
         while True:
             info = await self.get_room_info(user_id)
             if info:
