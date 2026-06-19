@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>前端开发工具箱</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧰</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1 class="logo">
+        <span class="logo-icon">&#9874;</span>
+        <span>前端开发工具箱</span>
+      </h1>
+      <p class="subtitle">常用前端开发小工具合集 - 纯前端，无需后端</p>
+      <button class="theme-toggle" id="themeToggle" title="切换主题">
+        <span id="themeIcon">&#9790;</span>
+      </button>
+    </header>
+
+    <nav class="tool-nav" id="toolNav">
+      <button class="nav-btn active" data-tool="color">颜色工具</button>
+      <button class="nav-btn" data-tool="json">JSON 格式化</button>
+      <button class="nav-btn" data-tool="base64">Base64 编解码</button>
+      <button class="nav-btn" data-tool="url">URL 编解码</button>
+      <button class="nav-btn" data-tool="timestamp">时间戳转换</button>
+      <button class="nav-btn" data-tool="regex">正则测试</button>
+      <button class="nav-btn" data-tool="diff">文本对比</button>
+      <button class="nav-btn" data-tool="hash">哈希生成</button>
+      <button class="nav-btn" data-tool="css">CSS 工具</button>
+      <button class="nav-btn" data-tool="lorem">占位文本</button>
+      <button class="nav-btn" data-tool="markdown">Markdown 预览</button>
+      <button class="nav-btn" data-tool="qrcode">二维码生成</button>
+    </nav>
+
+    <main class="tool-container" id="toolContainer">
+      <!-- Color Tool -->
+      <section class="tool-panel active" id="tool-color">
+        <h2>颜色工具</h2>
+        <div class="tool-grid">
+          <div class="tool-card">
+            <h3>颜色选择器</h3>
+            <div class="color-picker-area">
+              <input type="color" id="colorPicker" value="#4f46e5">
+              <div class="color-preview" id="colorPreview"></div>
+            </div>
+            <div class="color-values" id="colorValues"></div>
+          </div>
+          <div class="tool-card">
+            <h3>颜色格式转换</h3>
+            <label>输入颜色值 (HEX/RGB/HSL)</label>
+            <input type="text" id="colorInput" placeholder="#4f46e5 或 rgb(79,70,229) 或 hsl(243,76%,59%)">
+            <button class="btn" onclick="convertColor()">转换</button>
+            <div class="result" id="colorConvertResult"></div>
+          </div>
+          <div class="tool-card">
+            <h3>调色板生成</h3>
+            <label>基础颜色</label>
+            <input type="color" id="paletteBase" value="#4f46e5">
+            <div class="palette-options">
+              <button class="btn btn-sm" onclick="generatePalette('complementary')">互补色</button>
+              <button class="btn btn-sm" onclick="generatePalette('analogous')">类似色</button>
+              <button class="btn btn-sm" onclick="generatePalette('triadic')">三角色</button>
+              <button class="btn btn-sm" onclick="generatePalette('shades')">明暗色阶</button>
+            </div>
+            <div class="palette-display" id="paletteDisplay"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- JSON Tool -->
+      <section class="tool-panel" id="tool-json">
+        <h2>JSON 格式化</h2>
+        <div class="tool-row">
+          <div class="tool-col">
+            <label>输入 JSON</label>
+            <textarea id="jsonInput" rows="16" placeholder='{"name":"前端工具箱","version":"1.0"}'></textarea>
+            <div class="btn-group">
+              <button class="btn" onclick="formatJSON()">格式化</button>
+              <button class="btn btn-outline" onclick="minifyJSON()">压缩</button>
+              <button class="btn btn-outline" onclick="validateJSON()">验证</button>
+              <button class="btn btn-outline" onclick="copyResult('jsonOutput')">复制</button>
+            </div>
+          </div>
+          <div class="tool-col">
+            <label>输出结果</label>
+            <textarea id="jsonOutput" rows="16" readonly></textarea>
+            <div class="result" id="jsonValidation"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Base64 Tool -->
+      <section class="tool-panel" id="tool-base64">
+        <h2>Base64 编解码</h2>
+        <div class="tool-row">
+          <div class="tool-col">
+            <label>原始文本</label>
+            <textarea id="base64Input" rows="8" placeholder="输入需要编码的文本"></textarea>
+            <button class="btn" onclick="base64Encode()">编码 &#8594;</button>
+          </div>
+          <div class="tool-col">
+            <label>Base64 文本</label>
+            <textarea id="base64Output" rows="8" placeholder="输入需要解码的 Base64"></textarea>
+            <button class="btn" onclick="base64Decode()">&#8592; 解码</button>
+          </div>
+        </div>
+        <div class="tool-card" style="margin-top:1rem">
+          <h3>图片转 Base64</h3>
+          <input type="file" id="imageFileInput" accept="image/*" onchange="imageToBase64(event)">
+          <textarea id="imageBase64Output" rows="4" readonly placeholder="图片的 Base64 编码将显示在这里"></textarea>
+          <button class="btn btn-sm" onclick="copyResult('imageBase64Output')">复制</button>
+        </div>
+      </section>
+
+      <!-- URL Tool -->
+      <section class="tool-panel" id="tool-url">
+        <h2>URL 编解码</h2>
+        <div class="tool-row">
+          <div class="tool-col">
+            <label>原始文本</label>
+            <textarea id="urlInput" rows="6" placeholder="https://example.com/path?key=值&name=名称"></textarea>
+            <button class="btn" onclick="urlEncode()">编码 &#8594;</button>
+          </div>
+          <div class="tool-col">
+            <label>编码后文本</label>
+            <textarea id="urlOutput" rows="6" placeholder="编码后的 URL"></textarea>
+            <button class="btn" onclick="urlDecode()">&#8592; 解码</button>
+          </div>
+        </div>
+        <div class="tool-card" style="margin-top:1rem">
+          <h3>URL 参数解析</h3>
+          <input type="text" id="urlParseInput" placeholder="输入完整 URL 进行参数解析">
+          <button class="btn" onclick="parseURL()">解析</button>
+          <div class="result" id="urlParseResult"></div>
+        </div>
+      </section>
+
+      <!-- Timestamp Tool -->
+      <section class="tool-panel" id="tool-timestamp">
+        <h2>时间戳转换</h2>
+        <div class="tool-card">
+          <h3>当前时间</h3>
+          <div class="current-time" id="currentTime"></div>
+        </div>
+        <div class="tool-row">
+          <div class="tool-col">
+            <div class="tool-card">
+              <h3>时间戳 &#8594; 日期</h3>
+              <input type="text" id="timestampInput" placeholder="输入时间戳 (秒或毫秒)">
+              <button class="btn" onclick="timestampToDate()">转换</button>
+              <div class="result" id="timestampResult"></div>
+            </div>
+          </div>
+          <div class="tool-col">
+            <div class="tool-card">
+              <h3>日期 &#8594; 时间戳</h3>
+              <input type="datetime-local" id="dateInput">
+              <button class="btn" onclick="dateToTimestamp()">转换</button>
+              <div class="result" id="dateResult"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Regex Tool -->
+      <section class="tool-panel" id="tool-regex">
+        <h2>正则表达式测试</h2>
+        <div class="tool-card">
+          <label>正则表达式</label>
+          <div class="regex-input-row">
+            <span class="regex-slash">/</span>
+            <input type="text" id="regexPattern" placeholder="输入正则表达式">
+            <span class="regex-slash">/</span>
+            <input type="text" id="regexFlags" value="g" class="regex-flags" placeholder="flags">
+          </div>
+          <label>测试文本</label>
+          <textarea id="regexTestText" rows="6" placeholder="输入要测试的文本"></textarea>
+          <button class="btn" onclick="testRegex()">测试</button>
+          <div class="result" id="regexResult"></div>
+        </div>
+        <div class="tool-card">
+          <h3>常用正则</h3>
+          <div class="regex-presets" id="regexPresets"></div>
+        </div>
+      </section>
+
+      <!-- Diff Tool -->
+      <section class="tool-panel" id="tool-diff">
+        <h2>文本对比</h2>
+        <div class="tool-row">
+          <div class="tool-col">
+            <label>原始文本</label>
+            <textarea id="diffOld" rows="12" placeholder="输入原始文本"></textarea>
+          </div>
+          <div class="tool-col">
+            <label>新文本</label>
+            <textarea id="diffNew" rows="12" placeholder="输入新文本"></textarea>
+          </div>
+        </div>
+        <button class="btn" onclick="computeDiff()">对比</button>
+        <div class="diff-output" id="diffOutput"></div>
+      </section>
+
+      <!-- Hash Tool -->
+      <section class="tool-panel" id="tool-hash">
+        <h2>哈希生成</h2>
+        <div class="tool-card">
+          <label>输入文本</label>
+          <textarea id="hashInput" rows="4" placeholder="输入需要计算哈希的文本"></textarea>
+          <button class="btn" onclick="generateHashes()">生成哈希</button>
+          <div class="hash-results" id="hashResults"></div>
+        </div>
+        <div class="tool-card">
+          <h3>UUID 生成器</h3>
+          <div class="uuid-row">
+            <input type="text" id="uuidOutput" readonly>
+            <button class="btn btn-sm" onclick="generateUUID()">生成</button>
+            <button class="btn btn-sm btn-outline" onclick="copyResult('uuidOutput')">复制</button>
+          </div>
+          <label>批量生成</label>
+          <div class="uuid-row">
+            <input type="number" id="uuidCount" value="5" min="1" max="100">
+            <button class="btn btn-sm" onclick="generateBatchUUID()">批量生成</button>
+          </div>
+          <textarea id="uuidBatchOutput" rows="5" readonly></textarea>
+        </div>
+        <div class="tool-card">
+          <h3>随机密码生成</h3>
+          <div class="password-options">
+            <label><input type="checkbox" id="pwdUpper" checked> 大写字母</label>
+            <label><input type="checkbox" id="pwdLower" checked> 小写字母</label>
+            <label><input type="checkbox" id="pwdDigit" checked> 数字</label>
+            <label><input type="checkbox" id="pwdSpecial" checked> 特殊字符</label>
+            <label>长度: <input type="number" id="pwdLength" value="16" min="4" max="128"></label>
+          </div>
+          <button class="btn" onclick="generatePassword()">生成密码</button>
+          <div class="uuid-row">
+            <input type="text" id="pwdOutput" readonly>
+            <button class="btn btn-sm btn-outline" onclick="copyResult('pwdOutput')">复制</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- CSS Tool -->
+      <section class="tool-panel" id="tool-css">
+        <h2>CSS 工具</h2>
+        <div class="tool-grid">
+          <div class="tool-card">
+            <h3>Box Shadow 生成器</h3>
+            <div class="css-control">
+              <label>X 偏移: <span id="shadowXVal">4</span>px</label>
+              <input type="range" id="shadowX" min="-50" max="50" value="4" oninput="updateShadow()">
+            </div>
+            <div class="css-control">
+              <label>Y 偏移: <span id="shadowYVal">4</span>px</label>
+              <input type="range" id="shadowY" min="-50" max="50" value="4" oninput="updateShadow()">
+            </div>
+            <div class="css-control">
+              <label>模糊: <span id="shadowBlurVal">10</span>px</label>
+              <input type="range" id="shadowBlur" min="0" max="100" value="10" oninput="updateShadow()">
+            </div>
+            <div class="css-control">
+              <label>扩展: <span id="shadowSpreadVal">0</span>px</label>
+              <input type="range" id="shadowSpread" min="-50" max="50" value="0" oninput="updateShadow()">
+            </div>
+            <div class="css-control">
+              <label>颜色</label>
+              <input type="color" id="shadowColor" value="#000000" oninput="updateShadow()">
+              <label>透明度: <span id="shadowOpacityVal">0.2</span></label>
+              <input type="range" id="shadowOpacity" min="0" max="100" value="20" oninput="updateShadow()">
+            </div>
+            <div class="shadow-preview" id="shadowPreview"></div>
+            <code class="css-code" id="shadowCode"></code>
+            <button class="btn btn-sm" onclick="copyText(document.getElementById('shadowCode').textContent)">复制</button>
+          </div>
+          <div class="tool-card">
+            <h3>Border Radius 生成器</h3>
+            <div class="css-control">
+              <label>左上: <span id="brTLVal">10</span>px</label>
+              <input type="range" id="brTL" min="0" max="200" value="10" oninput="updateBorderRadius()">
+            </div>
+            <div class="css-control">
+              <label>右上: <span id="brTRVal">10</span>px</label>
+              <input type="range" id="brTR" min="0" max="200" value="10" oninput="updateBorderRadius()">
+            </div>
+            <div class="css-control">
+              <label>右下: <span id="brBRVal">10</span>px</label>
+              <input type="range" id="brBR" min="0" max="200" value="10" oninput="updateBorderRadius()">
+            </div>
+            <div class="css-control">
+              <label>左下: <span id="brBLVal">10</span>px</label>
+              <input type="range" id="brBL" min="0" max="200" value="10" oninput="updateBorderRadius()">
+            </div>
+            <div class="border-radius-preview" id="borderRadiusPreview"></div>
+            <code class="css-code" id="borderRadiusCode"></code>
+            <button class="btn btn-sm" onclick="copyText(document.getElementById('borderRadiusCode').textContent)">复制</button>
+          </div>
+          <div class="tool-card">
+            <h3>渐变生成器</h3>
+            <div class="css-control">
+              <label>类型</label>
+              <select id="gradientType" onchange="updateGradient()">
+                <option value="linear">线性渐变</option>
+                <option value="radial">径向渐变</option>
+              </select>
+            </div>
+            <div class="css-control">
+              <label>角度: <span id="gradientAngleVal">135</span>deg</label>
+              <input type="range" id="gradientAngle" min="0" max="360" value="135" oninput="updateGradient()">
+            </div>
+            <div class="css-control">
+              <label>颜色 1</label>
+              <input type="color" id="gradientColor1" value="#4f46e5" oninput="updateGradient()">
+            </div>
+            <div class="css-control">
+              <label>颜色 2</label>
+              <input type="color" id="gradientColor2" value="#7c3aed" oninput="updateGradient()">
+            </div>
+            <div class="gradient-preview" id="gradientPreview"></div>
+            <code class="css-code" id="gradientCode"></code>
+            <button class="btn btn-sm" onclick="copyText(document.getElementById('gradientCode').textContent)">复制</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Lorem Tool -->
+      <section class="tool-panel" id="tool-lorem">
+        <h2>占位文本生成</h2>
+        <div class="tool-card">
+          <div class="lorem-options">
+            <label>类型:
+              <select id="loremType">
+                <option value="paragraph">段落</option>
+                <option value="sentence">句子</option>
+                <option value="word">词语</option>
+              </select>
+            </label>
+            <label>数量: <input type="number" id="loremCount" value="3" min="1" max="50"></label>
+            <label>语言:
+              <select id="loremLang">
+                <option value="zh">中文</option>
+                <option value="en">English</option>
+              </select>
+            </label>
+          </div>
+          <button class="btn" onclick="generateLorem()">生成</button>
+          <textarea id="loremOutput" rows="10" readonly></textarea>
+          <button class="btn btn-sm btn-outline" onclick="copyResult('loremOutput')">复制</button>
+        </div>
+      </section>
+
+      <!-- Markdown Tool -->
+      <section class="tool-panel" id="tool-markdown">
+        <h2>Markdown 预览</h2>
+        <div class="tool-row">
+          <div class="tool-col">
+            <label>Markdown 源码</label>
+            <textarea id="markdownInput" rows="16" placeholder="# 标题&#10;&#10;这是 **Markdown** 文本" oninput="renderMarkdown()"></textarea>
+          </div>
+          <div class="tool-col">
+            <label>预览</label>
+            <div class="markdown-preview" id="markdownPreview"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- QR Code Tool -->
+      <section class="tool-panel" id="tool-qrcode">
+        <h2>二维码生成</h2>
+        <div class="tool-card">
+          <label>输入内容 (文本或网址)</label>
+          <textarea id="qrcodeInput" rows="3" placeholder="https://example.com"></textarea>
+          <div class="qr-options">
+            <label>大小:
+              <select id="qrcodeSize">
+                <option value="200">200x200</option>
+                <option value="300" selected>300x300</option>
+                <option value="400">400x400</option>
+                <option value="500">500x500</option>
+              </select>
+            </label>
+            <label>前景色: <input type="color" id="qrcodeFg" value="#000000"></label>
+            <label>背景色: <input type="color" id="qrcodeBg" value="#ffffff"></label>
+          </div>
+          <button class="btn" onclick="generateQRCode()">生成二维码</button>
+          <div class="qr-output" id="qrcodeOutput"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>前端开发工具箱 &copy; 2026 | 纯前端实现，所有数据仅在本地处理</p>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
