@@ -6,6 +6,7 @@
     { "source": "/ai-reading-notes", "destination": "/ai-reading-notes.html" },
     { "source": "/frontend-tools/(.*)", "destination": "/frontend-tools/$1" },
     { "source": "/frontend-tools", "destination": "/frontend-tools/index.html" },
-    { "source": "/(.*)", "destination": "/frontend-tools/index.html" }
+    { "source": "/daodejing/(.*)", "destination": "/daodejing/$1" },
+    { "source": "/daodejing", "destination": "/daodejing/index.html" }
   ]
 }
