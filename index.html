@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的工具站</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #f9f4e8;
+    font-family: Georgia, 'Noto Serif SC', serif;
+    color: #3e3529;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .container {
+    max-width: 720px;
+    width: 100%;
+    padding: 40px 20px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  header h1 {
+    font-size: 2rem;
+    color: #5a4632;
+    letter-spacing: 6px;
+    margin-bottom: 8px;
+  }
+
+  header p {
+    font-size: 0.95rem;
+    color: #8a7a66;
+    font-style: italic;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .card {
+    display: block;
+    background: #fffdf7;
+    border: 1px solid #e8dfcf;
+    border-radius: 16px;
+    padding: 32px 28px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 2px 12px rgba(90,70,50,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 24px rgba(90,70,50,0.15);
+  }
+
+  .card .icon {
+    font-size: 2.2rem;
+    margin-bottom: 14px;
+    display: block;
+  }
+
+  .card h2 {
+    font-size: 1.2rem;
+    color: #5a4632;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+
+  .card .desc {
+    font-size: 0.9rem;
+    color: #8a7a66;
+    line-height: 1.7;
+  }
+
+  .card .arrow {
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.4rem;
+    color: #c8a96e;
+    opacity: 0;
+    transition: opacity 0.2s, right 0.2s;
+  }
+
+  .card:hover .arrow {
+    opacity: 1;
+    right: 20px;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 48px;
+    font-size: 0.82rem;
+    color: #b0a494;
+  }
+
+  @media (min-width: 560px) {
+    .cards {
+      grid-template-columns: 1fr 1fr;
+    }
+    .cards .card:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+      max-width: 50%;
+      justify-self: center;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>我的工具站</h1>
+    <p>选择一个工具开始使用</p>
+  </header>
+
+  <div class="cards">
+    <a class="card" href="/frontend-tools/">
+      <span class="icon">🧰</span>
+      <h2>前端开发工具箱</h2>
+      <p class="desc">颜色转换、JSON 格式化、Base64 编解码、正则测试等常用前端小工具合集</p>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="card" href="/ai-reading-notes.html">
+      <span class="icon">📖</span>
+      <h2>AI 读书笔记生成器</h2>
+      <p class="desc">上传小说全文，AI 自动生成包含概览、人物、语录等六大模块的深度读书笔记</p>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="card" href="/daodejing/">
+      <span class="icon">📜</span>
+      <h2>道德经 — 老子智慧</h2>
+      <p class="desc">道德经八十一章全文阅读，感受千年智慧</p>
+      <span class="arrow">→</span>
+    </a>
+  </div>
+
+  <footer>持续更新中...</footer>
+</div>
+</body>
+</html>

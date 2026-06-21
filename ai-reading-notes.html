@@ -85,7 +85,8 @@
   label:first-of-type { margin-top: 0; }
 
   input[type="password"],
-  input[type="text"] {
+  input[type="text"],
+  select {
     width: 100%;
     padding: 10px 14px;
     border: 1px solid #d4c9b5;
@@ -98,7 +99,64 @@
     transition: border-color 0.2s;
   }
 
-  input:focus { border-color: #c8a96e; }
+  input:focus, select:focus { border-color: #c8a96e; }
+
+  select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7a66' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+
+  /* ========== 高级设置折叠区 ========== */
+  .advanced-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 18px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: #8a7a66;
+    user-select: none;
+    border: none;
+    background: none;
+    font-family: inherit;
+    padding: 0;
+  }
+
+  .advanced-toggle:hover { color: #6b5744; }
+
+  .advanced-toggle .arrow {
+    display: inline-block;
+    transition: transform 0.2s;
+    font-size: 0.7rem;
+  }
+
+  .advanced-toggle.open .arrow { transform: rotate(90deg); }
+
+  .advanced-fields {
+    display: none;
+    margin-top: 4px;
+    padding-top: 4px;
+  }
+
+  .advanced-fields.open { display: block; }
+
+  .field-hint {
+    font-size: 0.78rem;
+    color: #a09080;
+    margin-top: 3px;
+  }
+
+  .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .row-2 > div label:first-of-type { margin-top: 14px; }
 
   /* ========== 文件上传区 ========== */
   .upload-zone {
@@ -414,6 +472,7 @@
     .card { padding: 20px 18px; }
     .module-card { padding: 20px 18px; }
     header h1 { font-size: 1.5rem; }
+    .row-2 { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -428,9 +487,36 @@
 
   <!-- ===== 设置区 ===== -->
   <div class="card">
-    <h2>基本设置</h2>
-    <label for="apiKey">DeepSeek API Key</label>
-    <input type="password" id="apiKey" placeholder="请输入您的 DeepSeek API Key（sk-...）">
+    <h2>模型设置</h2>
+
+    <label for="apiProvider">API 类型</label>
+    <select id="apiProvider">
+      <option value="anthropic">Anthropic (Claude)</option>
+      <option value="openai">OpenAI 兼容 (OpenAI / DeepSeek / 通义等)</option>
+    </select>
+
+    <label for="apiKey">API Key</label>
+    <input type="password" id="apiKey" placeholder="请输入 API Key">
+
+    <!-- 高级设置折叠 -->
+    <button class="advanced-toggle" id="advancedToggle" type="button">
+      <span class="arrow">&#9654;</span> 高级设置
+    </button>
+    <div class="advanced-fields" id="advancedFields">
+      <div class="row-2">
+        <div>
+          <label for="apiEndpoint">API 端点</label>
+          <input type="text" id="apiEndpoint" placeholder="留空使用默认端点">
+          <div class="field-hint" id="endpointHint">默认：https://api.anthropic.com</div>
+        </div>
+        <div>
+          <label for="modelName">模型名称</label>
+          <input type="text" id="modelName" placeholder="留空使用默认模型">
+          <div class="field-hint" id="modelHint">默认：claude-sonnet-4-20250514</div>
+        </div>
+      </div>
+    </div>
+
     <label>上传小说全文（.txt）</label>
     <div class="upload-zone" id="uploadZone">
       <span class="icon">📖</span>
@@ -458,37 +544,31 @@
   <div class="report-section" id="reportSection">
     <h2>读 书 笔 记</h2>
 
-    <!-- 模块1：全书概览 -->
     <div class="module-card">
       <h3><span class="badge">壹</span> 全书概览</h3>
       <div class="content" id="mod-overview"></div>
     </div>
 
-    <!-- 模块2：情节脉络 -->
     <div class="module-card">
       <h3><span class="badge">贰</span> 情节脉络</h3>
       <div class="content" id="mod-plot"></div>
     </div>
 
-    <!-- 模块3：人物图谱 -->
     <div class="module-card">
       <h3><span class="badge">叁</span> 人物图谱</h3>
       <div class="content" id="mod-characters"></div>
     </div>
 
-    <!-- 模块4：经典语录 -->
     <div class="module-card">
       <h3><span class="badge">肆</span> 经典语录</h3>
       <div class="content" id="mod-quotes"></div>
     </div>
 
-    <!-- 模块5：深度洞见 -->
     <div class="module-card">
       <h3><span class="badge">伍</span> 深度洞见</h3>
       <div class="content" id="mod-insights"></div>
     </div>
 
-    <!-- 模块6：读者标签 -->
     <div class="module-card">
       <h3><span class="badge">陆</span> 读者标签</h3>
       <div class="content" id="mod-tags"></div>
@@ -499,34 +579,137 @@
 
 <script>
 // ===========================================================================
+//  各 API 类型的默认端点和模型名称
+// ===========================================================================
+const PROVIDER_DEFAULTS = {
+  anthropic: {
+    endpoint: 'https://api.anthropic.com',
+    model: 'claude-sonnet-4-20250514',
+    endpointLabel: '默认：https://api.anthropic.com（支持兼容端点，自动拼接 /v1/messages）',
+    modelLabel: '默认：claude-sonnet-4-20250514',
+    keyPlaceholder: '请输入 Anthropic API Key（sk-ant-...）'
+  },
+  openai: {
+    endpoint: 'https://api.openai.com/v1',
+    model: 'gpt-4o',
+    endpointLabel: '默认：https://api.openai.com/v1（支持 DeepSeek / 通义等兼容端点，自动拼接 /chat/completions）',
+    modelLabel: '默认：gpt-4o',
+    keyPlaceholder: '请输入 API Key（sk-...）'
+  }
+};
+
+// ===========================================================================
 //  全局变量
 // ===========================================================================
-let uploadedText = '';        // 用户上传的原文
-let abortController = null;   // 用于取消请求
+let uploadedText = '';
+let abortController = null;
 
 const $ = id => document.getElementById(id);
 
 // ===========================================================================
 //  DOM 引用
 // ===========================================================================
-const apiKeyInput   = $('apiKey');
-const fileInput     = $('fileInput');
-const uploadZone    = $('uploadZone');
-const fileNameEl    = $('fileName');
-const startBtn      = $('startBtn');
-const errorMsg      = $('errorMsg');
+const apiProviderSel = $('apiProvider');
+const apiKeyInput    = $('apiKey');
+const apiEndpointInput = $('apiEndpoint');
+const modelNameInput = $('modelName');
+const endpointHint   = $('endpointHint');
+const modelHint      = $('modelHint');
+const advancedToggle = $('advancedToggle');
+const advancedFields = $('advancedFields');
+const fileInput      = $('fileInput');
+const uploadZone     = $('uploadZone');
+const fileNameEl     = $('fileName');
+const startBtn       = $('startBtn');
+const errorMsg       = $('errorMsg');
 const progressSection = $('progressSection');
-const progressFill  = $('progressFill');
-const progressText  = $('progressText');
+const progressFill   = $('progressFill');
+const progressText   = $('progressText');
 const progressPercent = $('progressPercent');
-const reportSection = $('reportSection');
+const reportSection  = $('reportSection');
+
+// ===========================================================================
+//  localStorage 缓存键名
+// ===========================================================================
+const STORAGE_KEY = 'ai_reading_notes_config';
+
+// 从 localStorage 恢复用户上一次的配置
+function loadConfig() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (!saved) return;
+    if (saved.provider) apiProviderSel.value = saved.provider;
+    if (saved.apiKey) apiKeyInput.value = saved.apiKey;
+    if (saved.endpoint) apiEndpointInput.value = saved.endpoint;
+    if (saved.model) modelNameInput.value = saved.model;
+    // 如果有高级设置内容，自动展开
+    if (saved.endpoint || saved.model) {
+      advancedToggle.classList.add('open');
+      advancedFields.classList.add('open');
+    }
+    updateProviderUI();
+  } catch {}
+}
+
+// 保存当前配置到 localStorage
+function saveConfig() {
+  const config = {
+    provider: apiProviderSel.value,
+    apiKey: apiKeyInput.value.trim(),
+    endpoint: apiEndpointInput.value.trim(),
+    model: modelNameInput.value.trim()
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+}
+
+// ===========================================================================
+//  API 类型切换 → 更新提示信息
+// ===========================================================================
+function updateProviderUI() {
+  const defaults = PROVIDER_DEFAULTS[apiProviderSel.value];
+  endpointHint.textContent = defaults.endpointLabel;
+  modelHint.textContent = defaults.modelLabel;
+  apiKeyInput.placeholder = defaults.keyPlaceholder;
+  apiEndpointInput.placeholder = '留空使用默认端点';
+  modelNameInput.placeholder = '留空使用默认模型';
+}
+
+apiProviderSel.addEventListener('change', () => {
+  updateProviderUI();
+  saveConfig();
+  checkReady();
+});
+
+// 高级设置折叠
+advancedToggle.addEventListener('click', () => {
+  advancedToggle.classList.toggle('open');
+  advancedFields.classList.toggle('open');
+});
+
+// 输入变化时自动保存
+apiKeyInput.addEventListener('input', () => { saveConfig(); checkReady(); });
+apiEndpointInput.addEventListener('input', saveConfig);
+modelNameInput.addEventListener('input', saveConfig);
+
+// ===========================================================================
+//  获取当前生效的配置
+// ===========================================================================
+function getActiveConfig() {
+  const provider = apiProviderSel.value;
+  const defaults = PROVIDER_DEFAULTS[provider];
+  return {
+    provider,
+    apiKey: apiKeyInput.value.trim(),
+    endpoint: apiEndpointInput.value.trim() || defaults.endpoint,
+    model: modelNameInput.value.trim() || defaults.model
+  };
+}
 
 // ===========================================================================
 //  文件上传处理
 // ===========================================================================
 fileInput.addEventListener('change', handleFile);
 
-// 拖拽效果
 uploadZone.addEventListener('dragover', e => {
   e.preventDefault();
   uploadZone.classList.add('dragover');
@@ -564,8 +747,6 @@ function checkReady() {
   startBtn.disabled = !(apiKeyInput.value.trim() && uploadedText);
 }
 
-apiKeyInput.addEventListener('input', checkReady);
-
 // ===========================================================================
 //  错误显示
 // ===========================================================================
@@ -596,16 +777,11 @@ function setProgress(percent, text) {
 //  宁可让该块多几十个字，也要保证每一块都以完整句子结尾。
 // ===========================================================================
 function smartChunk(text) {
-  // 目标块大小和浮动范围
   const TARGET_SIZE = 5000;
   const TOLERANCE   = 300;
-  const MIN_SIZE    = TARGET_SIZE - TOLERANCE; // 4700
-  const MAX_SIZE    = TARGET_SIZE + TOLERANCE; // 5300
+  const MIN_SIZE    = TARGET_SIZE - TOLERANCE;
+  const MAX_SIZE    = TARGET_SIZE + TOLERANCE;
 
-  // 句末标点正则：中文句号、感叹号、问号、省略号，以及英文句号
-  const SENTENCE_END = /[。！？…\.]/;
-
-  // 按双换行拆分段落（过滤空段落）
   const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0);
 
   const chunks = [];
@@ -614,32 +790,25 @@ function smartChunk(text) {
   for (let i = 0; i < paragraphs.length; i++) {
     const para = paragraphs[i].trim();
 
-    // 如果当前块加上这一段还没超过上限，直接累加
     if (currentChunk.length + para.length + 1 <= MAX_SIZE) {
       currentChunk += (currentChunk ? '\n\n' : '') + para;
       continue;
     }
 
-    // 如果当前块已经达到最小阈值，先把当前块做断句处理并保存
     if (currentChunk.length >= MIN_SIZE) {
       chunks.push(ensureSentenceEnd(currentChunk));
       currentChunk = para;
       continue;
     }
 
-    // 当前块不够最小阈值，但加上本段会超过上限
-    // 尝试把本段部分文字追加进来，并在句末处截断
     currentChunk += (currentChunk ? '\n\n' : '') + para;
-    // 向后扫描找到一个合适的句末断点
     const cutPoint = findSentenceBreak(currentChunk, MIN_SIZE, currentChunk.length);
     chunks.push(currentChunk.substring(0, cutPoint + 1));
     const remainder = currentChunk.substring(cutPoint + 1).trim();
     currentChunk = remainder;
   }
 
-  // 处理最后剩余的文本
   if (currentChunk.trim().length > 0) {
-    // 如果最后一块太短（少于500字），合并到前一块
     if (chunks.length > 0 && currentChunk.length < 500) {
       chunks[chunks.length - 1] += '\n\n' + currentChunk.trim();
     } else {
@@ -650,62 +819,100 @@ function smartChunk(text) {
   return chunks;
 }
 
-/**
- * 确保文本以完整句子结尾。
- * 从文本末尾向前搜索句末标点，如果最后一个字符本身就是标点则直接返回。
- * 否则截断到最近的句末标点位置。
- */
 function ensureSentenceEnd(text) {
   if (!text) return text;
   const lastChar = text[text.length - 1];
   if (/[。！？…\.]/.test(lastChar)) return text;
-
-  // 从末尾向前查找最近的句末标点
   for (let i = text.length - 1; i >= 0; i--) {
-    if (/[。！？…\.]/.test(text[i])) {
-      return text.substring(0, i + 1);
-    }
+    if (/[。！？…\.]/.test(text[i])) return text.substring(0, i + 1);
   }
-  // 如果整段都没有句末标点，原样返回
   return text;
 }
 
-/**
- * 在 text 中从 startPos 到 endPos 范围内寻找最后一个句末标点的位置。
- * 用于在目标范围内找到最佳分割点。
- */
 function findSentenceBreak(text, startPos, endPos) {
-  // 从 endPos 向前找句末标点
   for (let i = endPos - 1; i >= startPos; i--) {
-    if (/[。！？…\.]/.test(text[i])) {
-      return i;
-    }
+    if (/[。！？…\.]/.test(text[i])) return i;
   }
-  // 没找到的话，扩大范围从 startPos 向前找
   for (let i = startPos - 1; i >= 0; i--) {
-    if (/[。！？…\.]/.test(text[i])) {
-      return i;
-    }
+    if (/[。！？…\.]/.test(text[i])) return i;
   }
-  // 实在找不到，返回 endPos
   return endPos - 1;
 }
 
 // ===========================================================================
-//  ★ DeepSeek API 调用封装
+//  ★ 统一 API 调用封装
 //  -----------------------------------------------------------------
-//  使用 DeepSeek Chat Completions API（兼容 OpenAI 格式）
-//  默认模型：deepseek-chat
+//  根据用户选择的 provider 类型，分别调用 Anthropic Messages API
+//  或 OpenAI 兼容的 Chat Completions API。
+//  支持自定义端点和模型名称。
 // ===========================================================================
-async function callDeepSeek(apiKey, messages, maxTokens = 4096) {
-  const response = await fetch('https://api.deepseek.com/chat/completions', {
+async function callAI(config, messages, maxTokens = 4096) {
+  if (config.provider === 'anthropic') {
+    return callAnthropic(config, messages, maxTokens);
+  } else {
+    return callOpenAI(config, messages, maxTokens);
+  }
+}
+
+// ---------- Anthropic Messages API ----------
+async function callAnthropic(config, messages, maxTokens) {
+  // 从 messages 中分离 system 和 user/assistant 消息
+  // Anthropic API 的 system 不在 messages 数组中，而是单独字段
+  let systemPrompt = '';
+  const apiMessages = [];
+  for (const msg of messages) {
+    if (msg.role === 'system') {
+      systemPrompt += (systemPrompt ? '\n' : '') + msg.content;
+    } else {
+      apiMessages.push(msg);
+    }
+  }
+
+  const body = {
+    model: config.model,
+    max_tokens: maxTokens,
+    messages: apiMessages,
+    temperature: 0.7
+  };
+  if (systemPrompt) body.system = systemPrompt;
+
+  const endpoint = config.endpoint.replace(/\/+$/, '');
+  const response = await fetch(endpoint + '/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
+      'x-api-key': config.apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify(body),
+    signal: abortController?.signal
+  });
+
+  if (!response.ok) {
+    const errBody = await response.text();
+    if (response.status === 401) throw new Error('API Key 无效，请检查后重试');
+    if (response.status === 429) throw new Error('请求频率过高，请稍后再试');
+    throw new Error(`Anthropic API 请求失败 (${response.status}): ${errBody}`);
+  }
+
+  const data = await response.json();
+  // Anthropic 返回格式：{ content: [{ type: "text", text: "..." }] }
+  const textBlocks = (data.content || []).filter(b => b.type === 'text');
+  return textBlocks.map(b => b.text).join('');
+}
+
+// ---------- OpenAI 兼容 Chat Completions API ----------
+async function callOpenAI(config, messages, maxTokens) {
+  const endpoint = config.endpoint.replace(/\/+$/, '');
+  const response = await fetch(endpoint + '/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${config.apiKey}`
     },
     body: JSON.stringify({
-      model: 'deepseek-chat',
+      model: config.model,
       messages: messages,
       max_tokens: maxTokens,
       temperature: 0.7
@@ -726,18 +933,14 @@ async function callDeepSeek(apiKey, messages, maxTokens = 4096) {
 
 // ===========================================================================
 //  ★ 主流程：生成读书笔记
-//  -----------------------------------------------------------------
-//  步骤：
-//    1. 对全文进行智能分块
-//    2. 逐块调用 AI 提取摘要
-//    3. 汇总所有摘要，生成六大模块报告
 // ===========================================================================
 startBtn.addEventListener('click', async () => {
-  const apiKey = apiKeyInput.value.trim();
-  if (!apiKey) { showError('请输入 DeepSeek API Key'); return; }
+  const config = getActiveConfig();
+  if (!config.apiKey) { showError('请输入 API Key'); return; }
   if (!uploadedText) { showError('请先上传 .txt 文件'); return; }
 
   hideError();
+  saveConfig();
   startBtn.disabled = true;
   reportSection.classList.remove('active');
   progressSection.classList.add('active');
@@ -756,7 +959,6 @@ startBtn.addEventListener('click', async () => {
     const summaries = [];
     for (let i = 0; i < totalChunks; i++) {
       const chunkIndex = i + 1;
-      // 进度映射：10% ~ 60% 给逐块摘要
       const chunkProgress = Math.round(10 + (i / totalChunks) * 50);
       setProgress(chunkProgress, `正在分析第 ${chunkIndex}/${totalChunks} 个文本块...`);
 
@@ -770,7 +972,7 @@ startBtn.addEventListener('click', async () => {
 原文内容：
 ${chunks[i]}`;
 
-      const summary = await callDeepSeek(apiKey, [
+      const summary = await callAI(config, [
         { role: 'system', content: '你是一位资深文学评论家和读书笔记专家。请用简洁、精炼的中文回答。' },
         { role: 'user', content: prompt }
       ]);
@@ -780,13 +982,11 @@ ${chunks[i]}`;
 
     // ========== 第3步：汇总生成六大模块 ==========
     setProgress(62, '所有文本块分析完毕，正在生成全书概览...');
-
-    // 将所有摘要合并为总纲要
     const allSummaries = summaries.join('\n\n---\n\n');
 
     // ----- 模块1：全书概览 -----
     setProgress(65, '正在生成全书概览...');
-    const overviewResult = await callDeepSeek(apiKey, [
+    const overviewResult = await callAI(config, [
       { role: 'system', content: '你是一位资深文学评论家。' },
       { role: 'user', content: `以下是一本小说各部分的摘要。请生成"全书概览"：
 1. 一句话总结全书内容
@@ -801,7 +1001,7 @@ ${allSummaries}` }
 
     // ----- 模块2：情节脉络 -----
     setProgress(72, '正在梳理情节脉络...');
-    const plotResult = await callDeepSeek(apiKey, [
+    const plotResult = await callAI(config, [
       { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
       { role: 'user', content: `以下是一本小说各部分的摘要。请按"开端-发展-高潮-结局"四个阶段梳理情节脉络，每阶段约50字。
 
@@ -815,7 +1015,7 @@ ${allSummaries}` }
 
     // ----- 模块3：人物图谱 -----
     setProgress(79, '正在分析人物关系...');
-    const charResult = await callDeepSeek(apiKey, [
+    const charResult = await callAI(config, [
       { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
       { role: 'user', content: `以下是一本小说各部分的摘要。请列出前5个主要人物，每人附一句性格标签，并在最后用一段文字描述人物之间的关系网。
 
@@ -829,7 +1029,7 @@ ${allSummaries}` }
 
     // ----- 模块4：经典语录 -----
     setProgress(85, '正在摘录经典语录...');
-    const quoteResult = await callDeepSeek(apiKey, [
+    const quoteResult = await callAI(config, [
       { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
       { role: 'user', content: `以下是一本小说各部分的摘要（其中可能包含原文摘录）。请挑选全书最精彩的5句话，附带大致出处位置。
 
@@ -843,7 +1043,7 @@ ${allSummaries}` }
 
     // ----- 模块5：深度洞见 -----
     setProgress(91, '正在撰写深度洞见...');
-    const insightResult = await callDeepSeek(apiKey, [
+    const insightResult = await callAI(config, [
       { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
       { role: 'user', content: `以下是一本小说各部分的摘要。请从以下三个维度各写一段点评（每段80-120字）：
 1. 写作手法
@@ -860,7 +1060,7 @@ ${allSummaries}` }
 
     // ----- 模块6：读者标签 -----
     setProgress(96, '正在生成读者标签...');
-    const tagResult = await callDeepSeek(apiKey, [
+    const tagResult = await callAI(config, [
       { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
       { role: 'user', content: `以下是一本小说各部分的摘要。请为本书自动生成10个关键词标签，每个标签2-4个字。
 
@@ -876,7 +1076,6 @@ ${allSummaries}` }
     setProgress(100, '读书笔记生成完毕！');
     reportSection.classList.add('active');
 
-    // 滚动到报告区域
     setTimeout(() => {
       reportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 500);
@@ -895,22 +1094,14 @@ ${allSummaries}` }
 });
 
 // ===========================================================================
-//  渲染函数：将 AI 返回的 JSON 文本解析并渲染到对应模块
+//  渲染函数
 // ===========================================================================
-
-/**
- * 从AI回复中提取JSON内容（兼容 markdown 代码块包裹的情况）
- */
 function extractJSON(text) {
-  // 尝试去掉可能的 markdown 代码块标记
   let cleaned = text.trim();
   cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
   return cleaned;
 }
 
-/**
- * 渲染情节脉络（开端-发展-高潮-结局）
- */
 function renderPlot(raw) {
   const container = $('mod-plot');
   try {
@@ -932,9 +1123,6 @@ function renderPlot(raw) {
   }
 }
 
-/**
- * 渲染人物图谱
- */
 function renderCharacters(raw) {
   const container = $('mod-characters');
   try {
@@ -953,16 +1141,13 @@ function renderCharacters(raw) {
   }
 }
 
-/**
- * 渲染经典语录
- */
 function renderQuotes(raw) {
   const container = $('mod-quotes');
   try {
     const data = JSON.parse(extractJSON(raw));
     container.innerHTML = data.map(q => `
       <div class="quote-item">
-        "${escapeHTML(q.quote)}"
+        “${escapeHTML(q.quote)}”
         <span class="source">—— ${escapeHTML(q.source)}</span>
       </div>
     `).join('');
@@ -971,9 +1156,6 @@ function renderQuotes(raw) {
   }
 }
 
-/**
- * 渲染深度洞见
- */
 function renderInsights(raw) {
   const container = $('mod-insights');
   try {
@@ -994,9 +1176,6 @@ function renderInsights(raw) {
   }
 }
 
-/**
- * 渲染读者标签
- */
 function renderTags(raw) {
   const container = $('mod-tags');
   try {
@@ -1009,14 +1188,17 @@ function renderTags(raw) {
   }
 }
 
-/**
- * HTML 转义，防止 XSS
- */
 function escapeHTML(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
 }
+
+// ===========================================================================
+//  页面初始化：恢复缓存配置
+// ===========================================================================
+loadConfig();
+checkReady();
 </script>
 </body>
 </html>
