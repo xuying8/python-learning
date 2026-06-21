@@ -585,14 +585,14 @@ const PROVIDER_DEFAULTS = {
   anthropic: {
     endpoint: 'https://api.anthropic.com',
     model: 'claude-sonnet-4-20250514',
-    endpointLabel: '默认：https://api.anthropic.com',
+    endpointLabel: '默认：https://api.anthropic.com（支持兼容端点，自动拼接 /v1/messages）',
     modelLabel: '默认：claude-sonnet-4-20250514',
     keyPlaceholder: '请输入 Anthropic API Key（sk-ant-...）'
   },
   openai: {
     endpoint: 'https://api.openai.com/v1',
     model: 'gpt-4o',
-    endpointLabel: '默认：https://api.openai.com/v1',
+    endpointLabel: '默认：https://api.openai.com/v1（支持 DeepSeek / 通义等兼容端点，自动拼接 /chat/completions）',
     modelLabel: '默认：gpt-4o',
     keyPlaceholder: '请输入 API Key（sk-...）'
   }
