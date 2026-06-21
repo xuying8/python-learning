@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>道德经 — 老子智慧</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=ZCOOL+XiaoWei&display=swap');
+
+:root {
+  --bg: #f6f1e7;
+  --bg-dark: #ebe4d4;
+  --ink: #2c2420;
+  --ink-light: #5a4e44;
+  --ink-faint: #8a7e72;
+  --accent: #8b2500;
+  --accent-light: #c44820;
+  --gold: #9e7c3a;
+  --gold-light: #c4a85a;
+  --card-bg: #faf7f0;
+  --border: #d6cdbf;
+  --shadow: rgba(44,36,32,0.08);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Noto Serif SC', 'Songti SC', 'SimSun', 'STSong', serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.9;
+  font-size: 17px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── NAV ─────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(246,241,231,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  transition: box-shadow 0.3s;
+}
+nav.scrolled { box-shadow: 0 2px 20px var(--shadow); }
+.nav-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; height: 56px;
+}
+.nav-brand {
+  font-size: 20px; font-weight: 700; color: var(--ink);
+  text-decoration: none; letter-spacing: 4px;
+}
+.nav-links { display: flex; gap: 28px; list-style: none; }
+.nav-links a {
+  text-decoration: none; color: var(--ink-light); font-size: 14px;
+  letter-spacing: 2px; transition: color 0.2s; position: relative;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--accent); }
+.nav-links a::after {
+  content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+  height: 2px; background: var(--accent); transform: scaleX(0);
+  transition: transform 0.3s;
+}
+.nav-links a:hover::after, .nav-links a.active::after { transform: scaleX(1); }
+.nav-toggle { display: none; background: none; border: none; cursor: pointer; font-size: 24px; color: var(--ink); }
+
+/* ── HERO ────────────────────────────────────── */
+.hero {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+  padding: 120px 24px 80px;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-dark) 50%, var(--bg) 100%);
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '道'; position: absolute;
+  font-size: min(60vw, 500px); color: rgba(44,36,32,0.03);
+  font-family: 'ZCOOL XiaoWei', serif; font-weight: 900;
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  pointer-events: none; user-select: none;
+}
+.hero-subtitle {
+  font-size: 14px; letter-spacing: 8px; color: var(--ink-faint);
+  text-transform: uppercase; margin-bottom: 24px;
+}
+.hero-title {
+  font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+  font-size: clamp(48px, 10vw, 100px);
+  font-weight: 400; letter-spacing: 16px;
+  color: var(--ink); margin-bottom: 8px;
+  line-height: 1.2;
+}
+.hero-author {
+  font-size: 20px; color: var(--ink-light); letter-spacing: 6px;
+  margin-bottom: 40px;
+}
+.hero-quote {
+  max-width: 600px; font-size: 18px; color: var(--ink-light);
+  line-height: 2; letter-spacing: 2px; margin-bottom: 48px;
+}
+.hero-divider {
+  width: 60px; height: 2px; background: var(--gold); margin-bottom: 48px;
+}
+.hero-cta {
+  display: inline-block; padding: 14px 40px;
+  border: 1px solid var(--ink); color: var(--ink);
+  text-decoration: none; font-size: 14px; letter-spacing: 4px;
+  transition: all 0.3s;
+}
+.hero-cta:hover {
+  background: var(--ink); color: var(--bg);
+}
+
+/* ── SECTIONS ────────────────────────────────── */
+section { padding: 100px 24px; }
+.section-inner { max-width: 1000px; margin: 0 auto; }
+.section-header {
+  text-align: center; margin-bottom: 64px;
+}
+.section-tag {
+  font-size: 12px; letter-spacing: 6px; color: var(--gold);
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.section-title {
+  font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+  font-size: clamp(28px, 5vw, 42px);
+  font-weight: 400; letter-spacing: 8px;
+  margin-bottom: 16px;
+}
+.section-desc {
+  font-size: 15px; color: var(--ink-light);
+  max-width: 600px; margin: 0 auto; letter-spacing: 1px;
+}
+
+/* ── IDEA CARDS ───────────────────────────────── */
+#ideas { background: var(--bg-dark); }
+.ideas-grid {
+  display: grid; grid-template-columns: 1fr; gap: 24px;
+}
+.idea-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden; transition: box-shadow 0.3s;
+}
+.idea-card:hover { box-shadow: 0 8px 32px var(--shadow); }
+.idea-header {
+  padding: 28px 32px; cursor: pointer;
+  display: flex; align-items: flex-start; gap: 20px;
+  user-select: none;
+}
+.idea-number {
+  font-family: 'ZCOOL XiaoWei', serif;
+  font-size: 36px; color: var(--gold-light);
+  line-height: 1; min-width: 44px; text-align: center;
+  opacity: 0.6;
+}
+.idea-header-text { flex: 1; }
+.idea-name {
+  font-size: 22px; font-weight: 700;
+  letter-spacing: 4px; margin-bottom: 8px;
+  color: var(--ink);
+}
+.idea-quote-preview {
+  font-size: 15px; color: var(--accent);
+  letter-spacing: 1px; line-height: 1.7;
+}
+.idea-toggle {
+  font-size: 20px; color: var(--ink-faint);
+  transition: transform 0.3s; margin-top: 6px;
+}
+.idea-card.open .idea-toggle { transform: rotate(180deg); }
+.idea-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.5s ease;
+}
+.idea-body-inner {
+  padding: 0 32px 32px 96px;
+}
+.idea-full-quote {
+  background: rgba(142,124,58,0.06);
+  border-left: 3px solid var(--gold);
+  padding: 16px 20px; margin-bottom: 20px;
+  font-size: 15px; color: var(--accent);
+  letter-spacing: 1px; line-height: 2;
+}
+.idea-explain {
+  font-size: 15px; color: var(--ink-light);
+  line-height: 2; margin-bottom: 16px;
+  text-align: justify;
+}
+.idea-insight {
+  font-size: 14px; color: var(--gold);
+  border-top: 1px solid var(--border);
+  padding-top: 16px; line-height: 1.8;
+  font-style: italic;
+}
+
+/* ── FULL TEXT ─────────────────────────────────── */
+#fulltext { background: var(--bg); }
+.chapter-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px; margin-bottom: 40px;
+}
+.chap-btn {
+  padding: 8px 4px; text-align: center;
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 3px; cursor: pointer;
+  font-size: 13px; color: var(--ink-light);
+  transition: all 0.2s; font-family: inherit;
+}
+.chap-btn:hover, .chap-btn.active {
+  background: var(--ink); color: var(--bg);
+  border-color: var(--ink);
+}
+.chapter-display {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 48px; min-height: 200px;
+  text-align: center;
+}
+.chapter-display-num {
+  font-family: 'ZCOOL XiaoWei', serif;
+  font-size: 14px; letter-spacing: 6px;
+  color: var(--gold); margin-bottom: 24px;
+}
+.chapter-display-text {
+  font-size: 19px; line-height: 2.4;
+  letter-spacing: 2px; color: var(--ink);
+  max-width: 700px; margin: 0 auto;
+  white-space: pre-line;
+}
+.chapter-nav {
+  display: flex; justify-content: center; gap: 16px; margin-top: 32px;
+}
+.chapter-nav button {
+  padding: 10px 28px; font-family: inherit;
+  font-size: 14px; letter-spacing: 2px;
+  background: none; border: 1px solid var(--border);
+  color: var(--ink-light); cursor: pointer;
+  border-radius: 3px; transition: all 0.2s;
+}
+.chapter-nav button:hover {
+  border-color: var(--ink); color: var(--ink);
+}
+.chapter-nav button:disabled {
+  opacity: 0.3; cursor: default;
+}
+
+/* ── FOOTER ───────────────────────────────────── */
+footer {
+  text-align: center; padding: 48px 24px;
+  border-top: 1px solid var(--border);
+  font-size: 13px; color: var(--ink-faint);
+  letter-spacing: 2px; line-height: 2;
+}
+
+/* ── SCROLL TOP ───────────────────────────────── */
+.scroll-top {
+  position: fixed; bottom: 32px; right: 32px;
+  width: 44px; height: 44px;
+  background: var(--ink); color: var(--bg);
+  border: none; border-radius: 50%;
+  font-size: 18px; cursor: pointer;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 90; display: flex; align-items: center; justify-content: center;
+}
+.scroll-top.show { opacity: 0.7; pointer-events: auto; }
+.scroll-top:hover { opacity: 1; transform: scale(1.1); }
+
+/* ── RESPONSIVE ───────────────────────────────── */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-links.open {
+    display: flex; flex-direction: column;
+    position: absolute; top: 56px; left: 0; right: 0;
+    background: rgba(246,241,231,0.97);
+    padding: 20px 24px; gap: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-toggle { display: block; }
+  .hero { padding: 100px 20px 60px; }
+  .idea-header { padding: 20px; gap: 12px; }
+  .idea-number { font-size: 28px; min-width: 36px; }
+  .idea-name { font-size: 18px; }
+  .idea-body-inner { padding: 0 20px 24px 68px; }
+  .chapter-display { padding: 28px 20px; }
+  .chapter-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+  section { padding: 60px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">道德经</a>
+    <button class="nav-toggle" onclick="toggleMenu()" aria-label="Menu">&#9776;</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#ideas">核心思想</a></li>
+      <li><a href="#fulltext">全文阅读</a></li>
+      <li><a href="#about">关于</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-subtitle">CLASSIC OF THE WAY AND VIRTUE</div>
+  <h1 class="hero-title">道 德 经</h1>
+  <p class="hero-author">老 子</p>
+  <div class="hero-divider"></div>
+  <p class="hero-quote">
+    道可道，非常道<br>
+    名可名，非常名<br>
+    无名天地之始<br>
+    有名万物之母
+  </p>
+  <a href="#ideas" class="hero-cta">探 索 智 慧</a>
+</section>
+
+<!-- CORE IDEAS -->
+<section id="ideas">
+  <div class="section-inner">
+    <div class="section-header">
+      <div class="section-tag">PHILOSOPHY</div>
+      <h2 class="section-title">核 心 思 想</h2>
+      <p class="section-desc">
+        两千五百年前的智慧，至今仍在指引我们。<br>
+        以下是《道德经》中最深刻、最精彩的哲学思想。
+      </p>
+    </div>
+
+    <div class="ideas-grid" id="ideasGrid">
+      <!-- JS renders cards -->
+    </div>
+  </div>
+</section>
+
+<!-- FULL TEXT -->
+<section id="fulltext">
+  <div class="section-inner">
+    <div class="section-header">
+      <div class="section-tag">ORIGINAL TEXT</div>
+      <h2 class="section-title">全 文 阅 读</h2>
+      <p class="section-desc">通行本八十一章 · 王弼注本</p>
+    </div>
+
+    <div class="chapter-grid" id="chapterGrid">
+      <!-- JS renders 81 buttons -->
+    </div>
+
+    <div class="chapter-display" id="chapterDisplay">
+      <div class="chapter-display-num" id="chapNum">第一章</div>
+      <div class="chapter-display-text" id="chapText">点击上方章节编号开始阅读</div>
+      <div class="chapter-nav">
+        <button onclick="prevChapter()" id="prevBtn">上一章</button>
+        <button onclick="nextChapter()" id="nextBtn">下一章</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-inner">
+    <div class="section-header">
+      <div class="section-tag">ABOUT</div>
+      <h2 class="section-title">关 于 本 书</h2>
+    </div>
+    <div style="max-width:700px; margin:0 auto; text-align:center; color:var(--ink-light); line-height:2.2; font-size:15px;">
+      <p>
+        《道德经》又称《老子》，是中国古代先秦诸子分家前的一部著作，
+        为其时诸子所共仰。传说是春秋时期的老子（李耳）所撰写，
+        是道家哲学思想的重要来源。
+      </p>
+      <br>
+      <p>
+        全书分为上篇《道经》（第1—37章）与下篇《德经》（第38—81章），
+        共约五千言，故又称"五千言"。
+        以"道"解释宇宙万物的演变，含有朴素辩证法的思想，
+        对中国哲学发展产生了深远影响。
+      </p>
+      <br>
+      <p>
+        本站采用通行本（王弼注本），为流传最广的版本。
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  道德经 · 老子<br>
+  天之道，利而不害；圣人之道，为而不争。
+</footer>
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0})">&#8593;</button>
+
+<script>
+// ── DATA: 12 Core Ideas ──────────────────────────
+const IDEAS = [
+  {
+    name: "道法自然",
+    preview: "人法地，地法天，天法道，道法自然。",
+    quotes: [
+      "人法地，地法天，天法道，道法自然。 ——第二十五章",
+      "道可道，非常道；名可名，非常名。无名天地之始，有名万物之母。 ——第一章",
+      "道生一，一生二，二生三，三生万物。 ——第四十二章"
+    ],
+    explain: ""道"是老子哲学的最高范畴，是天地万物的本原与本体。"道法自然"并非说道之上还有一个"自然"，而是说道的本性就是自然而然、自本自根。道无形无名，不可言说，却创生万物。道成就万物，不是有意作为，而是完全出于自然——"生而不有，为而不恃，长而不宰"。",
+    insight: "两千五百年前就提出了宇宙运行的根本法则——一切事物都应遵循其内在规律，不可强行违背。这是人类最早的系统性自然哲学之一，至今仍是生态哲学和可持续发展理念的思想源头。"
+  },
+  {
+    name: "无为而治",
+    preview: "道常无为，而无不为。",
+    quotes: [
+      "道常无为，而无不为。侯王若能守之，万物将自化。 ——第三十七章",
+      "我无为而民自化，我好静而民自正，我无事而民自富，我无欲而民自朴。 ——第五十七章",
+      "为无为，事无事，味无味。 ——第六十三章"
+    ],
+    explain: ""无为"是老子治国智慧的总纲，但绝非消极不作为。其真义是顺应自然规律而行，不妄为、不强为、不逆天道而动。正因为不违背自然，不强以为意，才能达到最好的效果——"无为而无不为"。",
+    insight: "这一理念揭示了过度干预往往适得其反的深刻道理。最高明的治理，是创造条件让事物自然发展，而非事无巨细地控制一切——对现代管理学、政治学都有极强的启示。"
+  },
+  {
+    name: "上善若水",
+    preview: "水善利万物而不争，处众人之所恶，故几于道。",
+    quotes: [
+      "上善若水。水善利万物而不争，处众人之所恶，故几于道。居善地，心善渊，与善仁，言善信，正善治，事善能，动善时。夫唯不争，故无尤。 ——第八章"
+    ],
+    explain: "老子以水为喻，阐述最高境界的善德。水具有三大品格：一是"利万物"——滋养万物却不索取回报；二是"不争"——不与万物争高下；三是"处下"——甘居众人不愿去的低处。同时，水在居处、心胸、待人、言语、治事、行动等七个方面都展现了至善之德。",
+    insight: "以水喻道，将抽象哲理化为最生动的自然意象。谦卑、利他、不争才是最接近道的品格——深刻影响了中国人的处世哲学和人格理想。"
+  },
+  {
+    name: "反者道之动",
+    preview: "祸兮，福之所倚；福兮，祸之所伏。",
+    quotes: [
+      "反者道之动，弱者道之用。天下万物生于有，有生于无。 ——第四十章",
+      "祸兮，福之所倚；福兮，祸之所伏。 ——第五十八章",
+      "曲则全，枉则直，洼则盈，敝则新，少则得，多则惑。 ——第二十二章"
+    ],
+    explain: ""反者道之动"揭示了宇宙万物运动变化的根本规律：事物总是朝着相反的方向发展转化，物极必反，循环往复。祸与福、强与弱、有与无，一切对立面都是相互依存、相互转化的。委曲反能保全，弯曲反能伸直，低洼反能充盈——看似矛盾的表述，蕴含着深刻的辩证智慧。",
+    insight: "老子的辩证法思想比黑格尔早了两千多年，却已精辟地揭示了对立统一的基本规律，是人类哲学史上最早、最深刻的辩证思维之一。"
+  },
+  {
+    name: "柔弱胜刚强",
+    preview: "天下莫柔弱于水，而攻坚强者莫之能胜。",
+    quotes: [
+      "天下莫柔弱于水，而攻坚强者莫之能胜，以其无以易之。弱之胜强，柔之胜刚，天下莫不知，莫能行。 ——第七十八章",
+      "人之生也柔弱，其死也坚强。万物草木之生也柔脆，其死也枯槁。故坚强者死之徒，柔弱者生之徒。 ——第七十六章"
+    ],
+    explain: "老子以水攻坚石、活人柔软而死人僵硬等自然现象为例，阐述了"守柔"的哲学主张。柔弱并非软弱无能，而是一种顺应自然、不与外力硬碰的生存智慧。天下没有比水更柔弱的，但攻克坚强之物没有能胜过水的。柔弱代表生机与活力，坚强则预示衰亡与僵化。",
+    insight: "彻底颠覆了"强者为王"的常规认知——柔韧、灵活、适应力才是长久生存的根本力量，对军事战略、商业竞争、个人成长都有深远的指导价值。"
+  },
+  {
+    name: "有无相生",
+    preview: "有之以为利，无之以为用。",
+    quotes: [
+      "有无相生，难易相成，长短相形，高下相盈，音声相和，前后相随。 ——第二章",
+      "三十辐共一毂，当其无，有车之用。埏埴以为器，当其无，有器之用。凿户牖以为室，当其无，有室之用。故有之以为利，无之以为用。 ——第十一章"
+    ],
+    explain: "老子提出了"有"与"无"这对根本性的哲学范畴。一切事物都是"有"与"无"的统一。车轮中间的空虚才使车有用，器皿中间的空间才使器皿有用，房屋的空间才使房屋可居——看似"无"的部分，恰恰是最关键的功能所在。",
+    insight: "深刻揭示了"空"与"虚"的巨大价值，打破了人们只重视"有"而忽视"无"的偏见，是建筑美学、空间设计乃至人生留白哲学的理论根基。"
+  },
+  {
+    name: "致虚守静",
+    preview: "致虚极，守静笃。万物并作，吾以观复。",
+    quotes: [
+      "致虚极，守静笃。万物并作，吾以观复。夫物芸芸，各复归其根。归根曰静，是谓复命。 ——第十六章",
+      "重为轻根，静为躁君。 ——第二十六章"
+    ],
+    explain: ""致虚极，守静笃"是老子修身养性的核心心法。"致虚"是让内心达到极度空明、无杂念的状态；"守静"是坚持安静笃定、不被外物所扰。只有在虚静的心境中，才能观照万物循环往复的规律，看清事物的本质。万物纷纷芸芸，最终都要回归其根本——归根就是静，了解这个规律才叫"明"。",
+    insight: "在充满喧嚣与焦虑的时代，"致虚守静"是冥想、正念等现代心理调适方法的古老哲学源头，教导人们通过内心的宁静来获得真正的洞察力。"
+  },
+  {
+    name: "知足不辱",
+    preview: "祸莫大于不知足，咎莫大于欲得。",
+    quotes: [
+      "知足不辱，知止不殆，可以长久。 ——第四十四章",
+      "祸莫大于不知足，咎莫大于欲得。故知足之足，常足矣。 ——第四十六章",
+      "金玉满堂，莫之能守；富贵而骄，自遗其咎。功遂身退，天之道也。 ——第九章"
+    ],
+    explain: "老子深刻指出，人生最大的祸患莫过于不知满足，最大的过错莫过于贪欲无度。懂得满足就不会受到屈辱，懂得适可而止就不会陷入危险，这样才能长久安泰。知足不是安于现状的消极态度，而是对个人私欲的节制。功成之后懂得身退，才符合天道。",
+    insight: "在物质主义盛行的当下尤为振聋发聩——幸福不在于拥有多少，而在于欲望与所得之间的平衡，是对抗现代人普遍焦虑的一剂良方。"
+  },
+  {
+    name: "天地不仁",
+    preview: "天地不仁，以万物为刍狗。",
+    quotes: [
+      "天地不仁，以万物为刍狗；圣人不仁，以百姓为刍狗。 ——第五章",
+      "天之道，损有余而补不足。人之道则不然，损不足以奉有余。 ——第七十七章"
+    ],
+    explain: ""天地不仁"并非说天地残忍，而是说天地没有偏私偏爱，对待万物一视同仁，任其自生自灭、自然发展。同时，老子指出天之道是"损有余而补不足"——自然法则趋向平衡；而人之道却相反，"损不足以奉有余"——穷者愈穷，富者愈富。",
+    insight: "提出了超越人类中心主义的宇宙观，主张万物平等、自然公正，同时深刻批判了社会不公的本质。"天之道损有余而补不足"是对社会公平正义最早、最精辟的哲学表达之一。"
+  },
+  {
+    name: "大音希声",
+    preview: "大方无隅，大器晚成，大音希声，大象无形。",
+    quotes: [
+      "大方无隅，大器晚成，大音希声，大象无形，道隐无名。 ——第四十一章",
+      "五色令人目盲，五音令人耳聋，五味令人口爽。 ——第十二章"
+    ],
+    explain: "最宏大的方形反而没有棱角，最伟大的器物最后才能完成，最宏大的声音反而听不到声响，最宏大的形象反而看不到具体的形状——道幽隐而没有名称。真正伟大的东西超越了具体形式的限制。同时，过度的感官刺激反而会使人丧失感知能力。",
+    insight: "揭示了"至简"与"至大"的内在统一，是极简主义美学和"少即是多"设计哲学的古老智慧源头——真正的伟大不在于外在的华丽，而在于内在的深邃与质朴。"
+  },
+  {
+    name: "见素抱朴",
+    preview: "见素抱朴，少私寡欲，绝学无忧。",
+    quotes: [
+      "见素抱朴，少私寡欲，绝学无忧。 ——第十九章",
+      "常德不离，复归于婴儿。 ——第二十八章",
+      "含德之厚，比于赤子。 ——第五十五章"
+    ],
+    explain: ""素"是未染色的丝，"朴"是未雕琢的木，二者都喻指事物最原始、最纯真的自然本色。老子主张人应当保持内心的素朴纯真，回归如婴儿般的天真本性，减少自私的欲望，不被外在的名利物欲所牵绊。这不是要人回到蒙昧状态，而是在纷繁复杂的世界中保持内心的清明与纯净。",
+    insight: "在信息爆炸、欲望膨胀的现代社会，"见素抱朴"提供了一种极其珍贵的精神解药——剥去层层伪装，找回生命最本真的状态。"
+  },
+  {
+    name: "不争之德",
+    preview: "夫唯不争，故天下莫能与之争。",
+    quotes: [
+      "夫唯不争，故天下莫能与之争。 ——第二十二章",
+      "天之道，利而不害；圣人之道，为而不争。 ——第八十一章",
+      "江海所以能为百谷王者，以其善下之，故能为百谷王。 ——第六十六章"
+    ],
+    explain: "江海之所以能成为百川归流之处，正因为它处于最低处——善于"处下"。不争不是不进取，而是不以争胜为目的，不与人争名夺利。正因为不争，所以天下没有人能与之相争。圣人的行为准则是"为而不争"——积极做事，但不争功夺利。",
+    insight: "揭示了一个深刻的悖论：越是不争，反而越能成就大业。真正的竞争力不在于击败对手，而在于成就自己、利益他人——这才是可持续的成功之道。"
+  }
+];
+
+// ── DATA: 81 Chapters ────────────────────────────
+const CHAPTERS = [
+  "道可道，非常道；名可名，非常名。无，名天地之始，有，名万物之母。\n故常无欲，以观其妙；常有欲，以观其徼。\n此两者同出而异名，同谓之玄，玄之又玄，众妙之门。",
+  "天下皆知美之为美，斯恶已；皆知善之为善，斯不善已。\n故有无相生，难易相成，长短相较，高下相倾，音声相和，前后相随。\n是以圣人处无为之事，行不言之教，\n万物作焉而不辞，生而不有，为而不恃，功成而弗居。\n夫唯弗居，是以不去。",
+  "不尚贤，使民不争；不贵难得之货，使民不为盗；不见可欲，使民心不乱。\n是以圣人之治，虚其心，实其腹；弱其志，强其骨。\n常使民无知无欲，使夫智者不敢为也。\n为无为，则无不治。",
+  "道冲而用之或不盈，渊兮似万物之宗。\n挫其锐，解其纷，和其光，同其尘。\n湛兮似或存，吾不知谁之子，象帝之先。",
+  "天地不仁，以万物为刍狗；\n圣人不仁，以百姓为刍狗。\n天地之间，其犹橐龠乎？\n虚而不屈，动而愈出。\n多言数穷，不如守中。",
+  "谷神不死，是谓玄牝，\n玄牝之门，是谓天地根。\n绵绵若存，用之不勤。",
+  "天长地久。天地所以能长且久者，以其不自生，故能长生。\n是以圣人后其身而身先，外其身而身存。\n非以其无私邪？故能成其私。",
+  "上善若水。水善利万物而不争，处众人之所恶，故几于道。\n居善地，心善渊，与善仁，言善信，正善治，事善能，动善时。\n夫唯不争，故无尤。",
+  "持而盈之，不若其已；\n揣而锐之，不可长保。\n金玉满堂，莫之能守；\n富贵而骄，自遗其咎。\n功遂身退，天之道也。",
+  "载营魄抱一，能无离乎？\n专气致柔，能婴儿乎？\n涤除玄览，能无疵乎？\n爱民治国，能无知乎？\n天门开阖，能无雌乎？\n明白四达，能无为乎？\n生之、畜之，生而不有，为而不恃，长而不宰，是谓玄德。",
+  "三十辐共一毂，当其无，有车之用。\n埏埴以为器，当其无，有器之用。\n凿户牖以为室，当其无，有室之用。\n故有之以为利，无之以为用。",
+  "五色令人目盲，五音令人耳聋，五味令人口爽，\n驰骋畋猎令人心发狂，难得之货令人行妨。\n是以圣人为腹不为目，故去彼取此。",
+  "宠辱若惊，贵大患若身。\n何谓宠辱若惊？宠为下，得之若惊，失之若惊，是谓宠辱若惊。\n何谓贵大患若身？吾所以有大患者，为吾有身，及吾无身，吾有何患！\n故贵以身为天下，若可寄天下；爱以身为天下，若可托天下。",
+  "视而不见，名曰夷；听之不闻，名曰希；\n搏之不得，名曰微。此三者不可致诘，故混而为一。\n其上不徼，其下不昧，绳绳兮不可名，复归于无物。\n是谓无状之状，无物之象，是谓惚恍。\n迎之不见其首，随之不见其后。\n执古之道，以御今之有。能知古始，是谓道纪。",
+  "古之善为士者，微妙玄通，深不可识。\n夫唯不可识，故强为之容。\n豫兮，若冬涉川；犹兮，若畏四邻；\n俨兮，其若客；涣兮，若冰之将释；\n敦兮，其若朴；旷兮，其若谷；浑兮，其若浊。\n孰能浊以止，静之徐清？\n孰能安以久，动之徐生？\n保此道者不欲盈，夫唯不盈，故能敝而新成。",
+  "致虚极，守静笃，万物并作，吾以观复。\n夫物芸芸，各复归其根。归根曰静，是谓复命。\n复命曰常，知常曰明，不知常，妄作，凶。\n知常容，容乃公，公乃王，王乃天，天乃道，道乃久，没身不殆。",
+  "太上，下知有之。\n其次，亲而誉之。\n其次，畏之。其次，侮之。\n信不足焉，有不信焉。\n悠兮其贵言。功成事遂，百姓皆谓我自然。",
+  "大道废，有仁义；慧智出，有大伪；\n六亲不和，有孝慈；国家昏乱，有忠臣。",
+  "绝圣弃智，民利百倍；\n绝仁弃义，民复孝慈；\n绝巧弃利，盗贼无有。\n此三者，以为文不足，故令有所属，见素抱朴，少私寡欲。",
+  "绝学无忧。唯之与阿，相去几何？\n善之与恶，相去若何？人之所畏，不可不畏。\n荒兮其未央哉！众人熙熙，如享太牢，如春登台。\n我独泊兮其未兆，如婴儿之未孩。傫傫兮若无所归。\n众人皆有余，而我独若遗。\n我愚人之心也哉！沌沌兮！俗人昭昭，我独昏昏；俗人察察，我独闷闷。\n澹兮其若海，飂兮若无止。\n众人皆有以，而我独顽似鄙。我独异于人，而贵食母。",
+  "孔德之容，惟道是从。\n道之为物，惟恍惟惚。\n惚兮恍兮，其中有象；恍兮惚兮，其中有物。\n窈兮冥兮，其中有精；其精甚真，其中有信。\n自古及今，其名不去，以阅众甫。吾何以知众甫之状哉？以此。",
+  "曲则全，枉则直，洼则盈，敝则新，少则得，多则惑。\n是以圣人抱一，为天下式。\n不自见故明，不自是故彰，不自伐故有功，不自矜故长。\n夫唯不争，故天下莫能与之争。\n古之所谓曲则全者，岂虚言哉！诚全而归之。",
+  "希言自然。\n故飘风不终朝，骤雨不终日。\n孰为此者？天地。\n天地尚不能久，而况于人乎？\n故从事于道者，道者同于道，德者同于德，失者同于失。\n同于道者，道亦乐得之；同于德者，德亦乐得之；同于失者，失亦乐得之。信不足焉，有不信焉。",
+  "企者不立，跨者不行，自见者不明，自是者不彰，自伐者无功，自矜者不长。\n其在道也，曰余食赘行。\n物或恶之，故有道者不处。",
+  "有物混成，先天地生。\n寂兮寥兮，独立不改，周行而不殆，可以为天下母。\n吾不知其名，字之曰道，强为之名曰大。\n大曰逝，逝曰远，远曰反。\n故道大，天大，地大，王亦大。\n域中有四大，而王居其一焉。\n人法地，地法天，天法道，道法自然。",
+  "重为轻根，静为躁君。\n是以圣人终日行不离辎重。\n虽有荣观，燕处超然，奈何万乘之主，而以身轻天下？\n轻则失本，躁则失君。",
+  "善行无辙迹，善言无瑕谪，善数不用筹策，善闭无关楗而不可开，善结无绳约而不可解。\n是以圣人常善救人，故无弃人；常善救物，故无弃物，是谓袭明。\n故善人者，不善人之师；不善人者，善人之资。\n不贵其师，不爱其资，虽智大迷，是谓要妙。",
+  "知其雄，守其雌，为天下溪。\n为天下溪，常德不离，复归于婴儿。\n知其白，守其黑，为天下式。\n为天下式，常德不忒，复归于无极。\n知其荣，守其辱，为天下谷。为天下谷，常德乃足，复归于朴。\n朴散则为器，圣人用之则为官长。故大制不割。",
+  "将欲取天下而为之，吾见其不得已。\n天下神器，不可为也。\n为者败之，执者失之。\n故物或行或随，或歔或吹，或强或羸，或挫或隳。\n是以圣人去甚，去奢，去泰。",
+  "以道佐人主者，不以兵强天下，其事好还。师之所处，荆棘生焉。\n大军之后，必有凶年。\n善有果而已，不敢以取强。果而勿矜，果而勿伐，果而勿骄，果而不得已，果而勿强。\n物壮则老，是谓不道，不道早已。",
+  "夫佳兵者，不祥之器。物或恶之，故有道者不处。\n君子居则贵左，用兵则贵右。\n兵者，不祥之器，非君子之器。\n不得已而用之，恬淡为上，胜而不美。\n而美之者，是乐杀人。夫乐杀人者，则不可以得志于天下矣。\n吉事尚左，凶事尚右。\n偏将军居左，上将军居右，言以丧礼处之。\n杀人之众，以哀悲泣之，战胜，以丧礼处之。",
+  "道常无名，朴虽小，天下莫能臣也。\n侯王若能守之，万物将自宾。\n天地相合以降甘露，民莫之令而自均。\n始制有名，名亦既有，夫亦将知止。\n知止可以不殆。譬道之在天下，犹川谷之于江海。",
+  "知人者智，自知者明。\n胜人者有力，自胜者强。\n知足者富，强行者有志，不失其所者久，死而不亡者寿。",
+  "大道泛兮，其可左右。\n万物恃之而生而不辞，功成不名有，衣养万物而不为主，常无欲，可名于小；\n万物归焉而不为主，可名为大。\n以其终不自为大，故能成其大。",
+  "执大象，天下往；往而不害，安平太。乐与饵，过客止。\n道之出口，淡乎其无味，视之不足见，听之不足闻，用之不足既。",
+  "将欲歙之，必固张之；将欲弱之，必固强之；\n将欲废之，必固兴之；将欲夺之，必固与之，是谓微明。\n柔弱胜刚强。鱼不可脱于渊，国之利器不可以示人。",
+  "道常无为而无不为，侯王若能守之，万物将自化。\n化而欲作，吾将镇之以无名之朴。\n无名之朴，夫亦将无欲。不欲以静，天下将自定。",
+  "上德不德，是以有德；下德不失德，是以无德。\n上德无为而无以为，下德为之而有以为。\n上仁为之而无以为，上义为之而有以为，上礼为之而莫之应，则攘臂而扔之。\n故失道而后德，失德而后仁，失仁而后义，失义而后礼。夫礼者，忠信之薄而乱之首。\n前识者，道之华而愚之始。\n是以大丈夫处其厚，不居其薄；处其实，不居其华。\n故去彼取此。",
+  "昔之得一者，天得一以清，地得一以宁，神得一以灵，谷得一以盈，万物得一以生，侯王得一以为天下贞。\n其致之。天无以清将恐裂，地无以宁将恐发，神无以灵将恐歇，谷无以盈将恐竭，万物无以生将恐灭，侯王无以贵高将恐蹶。\n故贵以贱为本，高以下为基。\n是以侯王自谓孤寡不穀。\n此非以贱为本邪？非乎？故致数舆无舆。\n不欲琭琭如玉，珞珞如石。",
+  "反者，道之动；弱者，道之用。\n天下万物生于有，有生于无。",
+  "上士闻道，勤而行之；中士闻道，若存若亡；下士闻道，大笑之，不笑不足以为道。\n故建言有之：明道若昧，进道若退，夷道若颣。\n上德若谷，大白若辱，广德若不足，建德若偷，质真若渝。\n大方无隅，大器晚成，大音希声，大象无形。\n道隐无名，夫唯道善贷且成。",
+  "道生一，一生二，二生三，三生万物。\n万物负阴而抱阳，冲气以为和。人之所恶，唯孤寡不穀，而王公以为称。\n故物，或损之而益，或益之而损。\n人之所教，我亦教之。\n强梁者不得其死，吾将以为教父。",
+  "天下之至柔，驰骋天下之至坚，无有入无间，吾是以知无为之有益。\n不言之教，无为之益，天下希及之。",
+  "名与身孰亲？身与货孰多？得与亡孰病？\n是故甚爱必大费，多藏必厚亡。\n知足不辱，知止不殆，可以长久。",
+  "大成若缺，其用不弊。\n大盈若冲，其用不穷。\n大直若屈，大巧若拙，大辩若讷。躁胜寒，静胜热。\n清静为天下正。",
+  "天下有道，却走马以粪；天下无道，戎马生于郊。\n祸莫大于不知足，咎莫大于欲得，故知足之足，常足矣。",
+  "不出户，知天下；不窥牖，见天道。\n其出弥远，其知弥少。是以圣人不行而知，不见而名，不为而成。",
+  "为学日益，为道日损。\n损之又损，以至于无为，无为而无不为。\n取天下常以无事，及其有事，不足以取天下。",
+  "圣人无常心，以百姓心为心。\n善者，吾善之；不善者，吾亦善之，德善。\n信者，吾信之；不信者，吾亦信之，德信。\n圣人在天下歙歙，为天下浑其心。\n百姓皆注其耳目，圣人皆孩之。",
+  "出生入死。\n生之徒十有三，死之徒十有三。\n人之生动之死地，亦十有三。\n夫何故？以其生生之厚。\n盖闻善摄生者，陆行不遇兕虎，入军不被甲兵，兕无所投其角，虎无所措其爪，兵无所容其刃。\n夫何故？以其无死地。",
+  "道生之，德畜之，物形之，势成之。\n是以万物莫不尊道而贵德。道之尊，德之贵，夫莫之命而常自然。\n故道生之，德畜之。\n长之、育之、亭之、毒之、养之、覆之。生而不有，为而不恃，长而不宰，是谓玄德。",
+  "天下有始，以为天下母。既得其母，以知其子；既知其子，复守其母，没身不殆。\n塞其兑，闭其门，终身不勤。\n开其兑，济其事，终身不救。见小曰明，守柔曰强。\n用其光，复归其明，无遗身殃，是为习常。",
+  "使我介然有知，行于大道，唯施是畏。\n大道甚夷，而民好径。\n朝甚除，田甚芜，仓甚虚。\n服文彩，带利剑，厌饮食，财货有余，是为盗夸。非道也哉！",
+  "善建者不拔，善抱者不脱，子孙以祭祀不辍。\n修之于身，其德乃真；修之于家，其德乃余；修之于乡，其德乃长；\n修之于国，其德乃丰；修之于天下，其德乃普。故以身观身，以家观家，以乡观乡，以国观国，以天下观天下。\n吾何以知天下然哉？以此。",
+  "含德之厚，比于赤子。\n蜂虿虺蛇不螫，猛兽不据，攫鸟不搏。\n骨弱筋柔而握固。\n未知牝牡之合而全作，精之至也。\n终日号而不嗄，和之至也。\n知和曰常，知常曰明，益生曰祥，心使气曰强。\n物壮则老，谓之不道，不道早已。",
+  "知者不言，言者不知。\n塞其兑，闭其门，挫其锐；解其纷，和其光，同其尘，是谓玄同。\n故不可得而亲，不可得而疏；不可得而利，不可得而害；不可得而贵，不可得而贱，故为天下贵。",
+  "以正治国，以奇用兵，以无事取天下。\n吾何以知其然哉？以此。\n天下多忌讳，而民弥贫；民多利器，国家滋昏；人多伎巧，奇物滋起；法令滋彰，盗贼多有。\n故圣人云：“我无为而民自化，我好静而民自正，我无事而民自富，我无欲而民自朴。”",
+  "其政闷闷，其民淳淳；其政察察，其民缺缺。\n祸兮福之所倚，福兮祸之所伏。孰知其极？\n其无正。正复为奇，善复为妖，人之迷，其日固久。\n是以圣人方而不割，廉而不刿，直而不肆，光而不耀。",
+  "治人事天莫若啬。\n夫唯啬，是谓早服。\n早服谓之重积德，重积德则无不克，无不克则莫知其极，莫知其极，可以有国。\n有国之母，可以长久。是谓深根固柢，长生久视之道。",
+  "治大国若烹小鲜。\n以道莅天下，其鬼不神。\n非其鬼不神，其神不伤人；非其神不伤人，圣人亦不伤人。夫两不相伤，故德交归焉。",
+  "大国者下流。\n天下之交，天下之牝。牝常以静胜牡，以静为下。\n故大国以下小国，则取小国；小国以下大国，则取大国。故或下以取，或下而取。\n大国不过欲兼畜人，小国不过欲入事人，夫两者各得其所欲，大者宜为下。",
+  "道者万物之奥，善人之宝，不善人之所保。美言可以市，尊行可以加人。\n人之不善，何弃之有！故立天子，置三公，虽有拱璧以先驷马，不如坐进此道。古之所以贵此道者何？\n不曰以求得，有罪以免邪？故为天下贵。",
+  "为无为，事无事，味无味。大小多少，报怨以德。图难于其易，为大于其细。\n天下难事必作于易，天下大事必作于细，是以圣人终不为大，故能成其大。\n夫轻诺必寡信，多易必多难，是以圣人犹难之。故终无难矣。",
+  "其安易持，其未兆易谋，其脆易泮，其微易散。为之于未有，治之于未乱。\n合抱之木，生于毫末；九层之台，起于累土；千里之行，始于足下。\n为者败之，执者失之。是以圣人无为，故无败；无执，故无失。\n民之从事，常于几成而败之。慎终如始，则无败事。是以圣人欲不欲，不贵难得之货。\n学不学，复众人之所过。以辅万物之自然，而不敢为。",
+  "古之善为道者，非以明民，将以愚之。\n民之难治，以其智多。故以智治国，国之贼；不以智治国，国之福。\n知此两者，亦稽式。\n常知稽式，是谓玄德。玄德深矣，远矣，与物反矣，然后乃至大顺。",
+  "江海所以能为百谷王者，以其善下之，故能为百谷王。\n是以欲上民，必以言下之；欲先民，必以身后之。\n是以圣人处上而民不重，处前而民不害，是以天下乐推而不厌。以其不争，故天下莫能与之争。",
+  "天下皆谓我道大，似不肖。\n夫唯大，故似不肖。若肖，久矣其细也夫。我有三宝，持而保之。\n一曰慈，二曰俭，三曰不敢为天下先。\n慈，故能勇；俭，故能广；不敢为天下先，故能成器长。\n今舍慈且勇，舍俭且广，舍后且先，死矣！夫慈，以战则胜，以守则固，天将救之，以慈卫之。",
+  "善为士者不武，善战者不怒，善胜敌者不与，善用人者为之下。\n是谓不争之德，是谓用人之力，是谓配天古之极。",
+  "用兵有言，吾不敢为主而为客，不敢进寸而退尺。\n是谓行无行，攘无臂，扔无敌，执无兵。\n祸莫大于轻敌，轻敌几丧吾宝。故抗兵相加，哀者胜矣。",
+  "吾言甚易知，甚易行，天下莫能知，莫能行。\n言有宗，事有君。夫唯无知，是以不我知。\n知我者希，则我者贵，是以圣人被褐怀玉。",
+  "知不知，上；不知知，病。\n夫唯病病，是以不病。\n圣人不病，以其病病，是以不病。",
+  "民不畏威，则大威至。\n无狎其所居，无厌其所生。\n夫唯不厌，是以不厌。\n是以圣人自知，不自见；自爱，不自贵。故去彼取此。",
+  "勇于敢则杀，勇于不敢则活。\n此两者，或利或害。\n天之所恶，孰知其故？是以圣人犹难之。\n天之道，不争而善胜，不言而善应，不召而自来，繟然而善谋。\n天网恢恢，疏而不失。",
+  "民不畏死，奈何以死惧之！\n若使民常畏死，而为奇者，吾得执而杀之，孰敢？\n常有司杀者杀，夫代司杀者杀，是谓代大匠斫。\n夫代大匠斫者，希有不伤其手矣。",
+  "民之饥，以其上食税之多，是以饥。\n民之难治，以其上之有为，是以难治。民之轻死，以其求生之厚，是以轻死。\n夫唯无以生为者，是贤于贵生。",
+  "人之生也柔弱，其死也坚强。\n万物草木之生也柔脆，其死也枯槁。\n故坚强者死之徒，柔弱者生之徒。\n是以兵强则不胜，木强则兵。强大处下，柔弱处上。",
+  "天之道，其犹张弓与！\n高者抑之，下者举之；有余者损之，不足者补之。\n天之道，损有余而补不足。\n人之道则不然，损不足以奉有余。\n孰能有余以奉天下？唯有道者。\n是以圣人为而不恃，功成而不处，其不欲见贤。",
+  "天下莫柔弱于水，而攻坚强者莫之能胜，其无以易之。\n弱之胜强，柔之胜刚，天下莫不知，莫能行。\n是以圣人云，受国之垢，是谓社稷主；受国不祥，是为天下王。正言若反。",
+  "和大怨，必有余怨，安可以为善？\n是以圣人执左契，而不责于人。\n有德司契，无德司彻。\n天道无亲，常与善人。",
+  "小国寡民，使有什伯之器而不用，使民重死而不远徙。\n虽有舟舆，无所乘之；虽有甲兵，无所陈之；使人复结绳而用之。\n甘其食，美其服，安其居，乐其俗。邻国相望，鸡犬之声相闻，民至老死不相往来。",
+  "信言不美，美言不信；善者不辩，辩者不善；知者不博，博者不知。\n圣人不积，既以为人，己愈有；既以与人，己愈多。\n天之道，利而不害。圣人之道，为而不争。"
+];
+
+
+// ── RENDER IDEAS ─────────────────────────────────
+const grid = document.getElementById('ideasGrid');
+IDEAS.forEach((idea, i) => {
+  const card = document.createElement('div');
+  card.className = 'idea-card';
+  card.innerHTML = `
+    <div class="idea-header" onclick="toggleIdea(this)">
+      <div class="idea-number">${numToChinese(i+1)}</div>
+      <div class="idea-header-text">
+        <div class="idea-name">${idea.name}</div>
+        <div class="idea-quote-preview">${idea.preview}</div>
+      </div>
+      <div class="idea-toggle">&#9662;</div>
+    </div>
+    <div class="idea-body">
+      <div class="idea-body-inner">
+        <div class="idea-full-quote">${idea.quotes.map(q => q.replace(/——/,'<br><span style="font-size:12px;color:var(--ink-faint)">——') + '</span>').join('<br><br>')}</div>
+        <div class="idea-explain">${idea.explain}</div>
+        <div class="idea-insight">${idea.insight}</div>
+      </div>
+    </div>`;
+  grid.appendChild(card);
+});
+
+function numToChinese(n) {
+  const chars = ['','一','二','三','四','五','六','七','八','九','十','十一','十二'];
+  return chars[n] || n;
+}
+
+function toggleIdea(header) {
+  const card = header.parentElement;
+  const body = card.querySelector('.idea-body');
+  if (card.classList.contains('open')) {
+    card.classList.remove('open');
+    body.style.maxHeight = '0';
+  } else {
+    card.classList.add('open');
+    body.style.maxHeight = body.scrollHeight + 'px';
+  }
+}
+
+
+// ── RENDER CHAPTERS ──────────────────────────────
+const chapGrid = document.getElementById('chapterGrid');
+let currentChap = 0;
+
+for (let i = 0; i < 81; i++) {
+  const btn = document.createElement('button');
+  btn.className = 'chap-btn';
+  btn.textContent = `第${i+1}章`;
+  btn.onclick = () => showChapter(i);
+  chapGrid.appendChild(btn);
+}
+showChapter(0);
+
+function showChapter(idx) {
+  currentChap = idx;
+  document.getElementById('chapNum').textContent = `第${idx+1}章`;
+  document.getElementById('chapText').textContent = CHAPTERS[idx];
+  document.getElementById('prevBtn').disabled = idx === 0;
+  document.getElementById('nextBtn').disabled = idx === 80;
+  // highlight active button
+  document.querySelectorAll('.chap-btn').forEach((b,i) => {
+    b.classList.toggle('active', i === idx);
+  });
+}
+function prevChapter() { if (currentChap > 0) showChapter(currentChap - 1); }
+function nextChapter() { if (currentChap < 80) showChapter(currentChap + 1); }
+
+
+// ── NAV scroll effects ──────────────────────────
+const nav = document.getElementById('mainNav');
+const scrollBtn = document.getElementById('scrollTop');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 50);
+  scrollBtn.classList.toggle('show', window.scrollY > 600);
+});
+
+function toggleMenu() {
+  document.getElementById('navLinks').classList.toggle('open');
+}
+
+// Close mobile menu on link click
+document.querySelectorAll('.nav-links a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.getElementById('navLinks').classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>
