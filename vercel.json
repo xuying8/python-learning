@@ -1,8 +1,11 @@
 {
   "buildCommand": null,
-  "outputDirectory": "frontend-tools",
+  "outputDirectory": ".",
   "framework": null,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/ai-reading-notes", "destination": "/ai-reading-notes.html" },
+    { "source": "/frontend-tools/(.*)", "destination": "/frontend-tools/$1" },
+    { "source": "/frontend-tools", "destination": "/frontend-tools/index.html" },
+    { "source": "/(.*)", "destination": "/frontend-tools/index.html" }
   ]
 }
