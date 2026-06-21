@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 智能读书笔记生成器</title>
+<style>
+  /* ========== 全局样式：复古手账风格 ========== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: #f9f4e8;
+    font-family: Georgia, 'Noto Serif SC', 'Source Han Serif CN', serif;
+    color: #3e3529;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* ========== 标题区 ========== */
+  header {
+    text-align: center;
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 2px dashed #c8b890;
+  }
+
+  header h1 {
+    font-size: 2rem;
+    letter-spacing: 4px;
+    color: #5a4632;
+    margin-bottom: 8px;
+  }
+
+  header p {
+    font-size: 0.95rem;
+    color: #8a7a66;
+    font-style: italic;
+  }
+
+  /* ========== 输入区卡片 ========== */
+  .card {
+    background: #fffdf7;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(90, 70, 50, 0.10);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    border: 1px solid #e8dfcf;
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    border: 1px dashed #e0d5c3;
+    border-radius: 8px;
+    pointer-events: none;
+  }
+
+  .card h2 {
+    font-size: 1.15rem;
+    color: #6b5744;
+    margin-bottom: 18px;
+    padding-left: 12px;
+    border-left: 4px solid #c8a96e;
+  }
+
+  /* ========== 表单元素 ========== */
+  label {
+    display: block;
+    font-size: 0.9rem;
+    color: #7a6b58;
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+
+  label:first-of-type { margin-top: 0; }
+
+  input[type="password"],
+  input[type="text"] {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d4c9b5;
+    border-radius: 8px;
+    background: #fdfbf6;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: #3e3529;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus { border-color: #c8a96e; }
+
+  /* ========== 文件上传区 ========== */
+  .upload-zone {
+    margin-top: 14px;
+    border: 2px dashed #cfc1a8;
+    border-radius: 12px;
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    position: relative;
+  }
+
+  .upload-zone:hover,
+  .upload-zone.dragover {
+    background: #f5eedf;
+    border-color: #c8a96e;
+  }
+
+  .upload-zone .icon {
+    font-size: 2.4rem;
+    margin-bottom: 8px;
+    display: block;
+    opacity: 0.55;
+  }
+
+  .upload-zone .hint {
+    font-size: 0.9rem;
+    color: #9a8b78;
+  }
+
+  .upload-zone .file-name {
+    margin-top: 10px;
+    font-size: 0.92rem;
+    color: #6b5744;
+    font-weight: bold;
+    word-break: break-all;
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  /* ========== 按钮 ========== */
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    margin-top: 22px;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #c8a96e, #a3854a);
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(163, 133, 74, 0.3);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #b89a5e, #8f7340);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ========== 进度条 ========== */
+  .progress-section {
+    display: none;
+    margin-top: 24px;
+  }
+
+  .progress-section.active { display: block; }
+
+  .progress-bar-wrap {
+    background: #ece4d4;
+    border-radius: 20px;
+    height: 22px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #c8a96e, #d4b87a, #c8a96e);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease infinite;
+    border-radius: 20px;
+    transition: width 0.4s ease;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .progress-text {
+    text-align: center;
+    font-size: 0.88rem;
+    color: #8a7a66;
+    margin-top: 10px;
+    min-height: 1.4em;
+  }
+
+  .progress-percent {
+    text-align: center;
+    font-size: 0.82rem;
+    color: #a0927f;
+    margin-top: 4px;
+  }
+
+  /* ========== 报告区域 ========== */
+  .report-section { display: none; }
+  .report-section.active { display: block; }
+
+  .report-section > h2 {
+    text-align: center;
+    font-size: 1.5rem;
+    color: #5a4632;
+    margin: 40px 0 24px;
+    letter-spacing: 3px;
+  }
+
+  .report-section > h2::before,
+  .report-section > h2::after {
+    content: ' ✦ ';
+    font-size: 0.8rem;
+    vertical-align: middle;
+    color: #c8a96e;
+  }
+
+  /* ========== 模块卡片 ========== */
+  .module-card {
+    background: #fffdf7;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(90, 70, 50, 0.10);
+    padding: 26px 30px;
+    margin-bottom: 22px;
+    border: 1px solid #e8dfcf;
+  }
+
+  .module-card h3 {
+    font-size: 1.1rem;
+    color: #6b5744;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #ddd3c2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .module-card h3 .badge {
+    display: inline-block;
+    background: #c8a96e;
+    color: #fff;
+    font-size: 0.72rem;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-weight: normal;
+    letter-spacing: 1px;
+  }
+
+  .module-card .content {
+    font-size: 0.95rem;
+    line-height: 1.85;
+    color: #4a3f33;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ---- 人物图谱表格 ---- */
+  .char-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+  }
+
+  .char-table th,
+  .char-table td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e8dfcf;
+    font-size: 0.92rem;
+  }
+
+  .char-table th {
+    color: #8a7a66;
+    font-weight: normal;
+    font-size: 0.82rem;
+    letter-spacing: 1px;
+  }
+
+  /* ---- 语录 ---- */
+  .quote-item {
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    background: #f9f4e8;
+    border-radius: 8px;
+    border-left: 3px solid #c8a96e;
+    font-style: italic;
+    font-size: 0.93rem;
+    line-height: 1.75;
+  }
+
+  .quote-item .source {
+    display: block;
+    text-align: right;
+    font-style: normal;
+    font-size: 0.8rem;
+    color: #a0927f;
+    margin-top: 6px;
+  }
+
+  /* ---- 标签 ---- */
+  .tags-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 6px 16px;
+    background: #f0e8d6;
+    color: #6b5744;
+    border-radius: 20px;
+    font-size: 0.88rem;
+    border: 1px solid #ddd3c2;
+  }
+
+  /* ---- 洞见维度 ---- */
+  .insight-block {
+    margin-bottom: 16px;
+  }
+
+  .insight-block:last-child { margin-bottom: 0; }
+
+  .insight-block h4 {
+    font-size: 0.95rem;
+    color: #8a6e4a;
+    margin-bottom: 6px;
+  }
+
+  .insight-block p {
+    font-size: 0.93rem;
+    line-height: 1.8;
+    color: #4a3f33;
+  }
+
+  /* ---- 情节阶段 ---- */
+  .plot-stage {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+  }
+
+  .plot-stage:last-child { margin-bottom: 0; }
+
+  .plot-stage .stage-label {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c8a96e, #a3854a);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+
+  .plot-stage .stage-text {
+    font-size: 0.93rem;
+    line-height: 1.75;
+    color: #4a3f33;
+    padding-top: 12px;
+  }
+
+  /* ========== 错误提示 ========== */
+  .error-msg {
+    color: #b44;
+    background: #fff0f0;
+    border: 1px solid #e8c0c0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 14px;
+    font-size: 0.9rem;
+    display: none;
+  }
+
+  .error-msg.active { display: block; }
+
+  /* ========== 响应式 ========== */
+  @media (max-width: 600px) {
+    .container { padding: 20px 12px 60px; }
+    .card { padding: 20px 18px; }
+    .module-card { padding: 20px 18px; }
+    header h1 { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ===== 标题 ===== -->
+  <header>
+    <h1>AI 智能读书笔记生成器</h1>
+    <p>上传小说全文，一键生成深度读书笔记</p>
+  </header>
+
+  <!-- ===== 设置区 ===== -->
+  <div class="card">
+    <h2>基本设置</h2>
+    <label for="apiKey">DeepSeek API Key</label>
+    <input type="password" id="apiKey" placeholder="请输入您的 DeepSeek API Key（sk-...）">
+    <label>上传小说全文（.txt）</label>
+    <div class="upload-zone" id="uploadZone">
+      <span class="icon">📖</span>
+      <span class="hint">点击或拖拽上传 .txt 文件</span>
+      <div class="file-name" id="fileName"></div>
+      <input type="file" id="fileInput" accept=".txt">
+    </div>
+    <button class="btn btn-primary" id="startBtn" disabled>生 成 读 书 笔 记</button>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- ===== 进度区 ===== -->
+  <div class="progress-section" id="progressSection">
+    <div class="card">
+      <h2>生成进度</h2>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-text" id="progressText">准备中...</div>
+      <div class="progress-percent" id="progressPercent">0%</div>
+    </div>
+  </div>
+
+  <!-- ===== 报告区 ===== -->
+  <div class="report-section" id="reportSection">
+    <h2>读 书 笔 记</h2>
+
+    <!-- 模块1：全书概览 -->
+    <div class="module-card">
+      <h3><span class="badge">壹</span> 全书概览</h3>
+      <div class="content" id="mod-overview"></div>
+    </div>
+
+    <!-- 模块2：情节脉络 -->
+    <div class="module-card">
+      <h3><span class="badge">贰</span> 情节脉络</h3>
+      <div class="content" id="mod-plot"></div>
+    </div>
+
+    <!-- 模块3：人物图谱 -->
+    <div class="module-card">
+      <h3><span class="badge">叁</span> 人物图谱</h3>
+      <div class="content" id="mod-characters"></div>
+    </div>
+
+    <!-- 模块4：经典语录 -->
+    <div class="module-card">
+      <h3><span class="badge">肆</span> 经典语录</h3>
+      <div class="content" id="mod-quotes"></div>
+    </div>
+
+    <!-- 模块5：深度洞见 -->
+    <div class="module-card">
+      <h3><span class="badge">伍</span> 深度洞见</h3>
+      <div class="content" id="mod-insights"></div>
+    </div>
+
+    <!-- 模块6：读者标签 -->
+    <div class="module-card">
+      <h3><span class="badge">陆</span> 读者标签</h3>
+      <div class="content" id="mod-tags"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===========================================================================
+//  全局变量
+// ===========================================================================
+let uploadedText = '';        // 用户上传的原文
+let abortController = null;   // 用于取消请求
+
+const $ = id => document.getElementById(id);
+
+// ===========================================================================
+//  DOM 引用
+// ===========================================================================
+const apiKeyInput   = $('apiKey');
+const fileInput     = $('fileInput');
+const uploadZone    = $('uploadZone');
+const fileNameEl    = $('fileName');
+const startBtn      = $('startBtn');
+const errorMsg      = $('errorMsg');
+const progressSection = $('progressSection');
+const progressFill  = $('progressFill');
+const progressText  = $('progressText');
+const progressPercent = $('progressPercent');
+const reportSection = $('reportSection');
+
+// ===========================================================================
+//  文件上传处理
+// ===========================================================================
+fileInput.addEventListener('change', handleFile);
+
+// 拖拽效果
+uploadZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  uploadZone.classList.add('dragover');
+});
+uploadZone.addEventListener('dragleave', () => {
+  uploadZone.classList.remove('dragover');
+});
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) {
+    fileInput.files = e.dataTransfer.files;
+    handleFile();
+  }
+});
+
+function handleFile() {
+  const file = fileInput.files[0];
+  if (!file) return;
+  if (!file.name.endsWith('.txt')) {
+    showError('请上传 .txt 格式的文本文件');
+    return;
+  }
+  hideError();
+  const reader = new FileReader();
+  reader.onload = e => {
+    uploadedText = e.target.result;
+    fileNameEl.textContent = `${file.name}（${(uploadedText.length / 10000).toFixed(1)} 万字）`;
+    checkReady();
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function checkReady() {
+  startBtn.disabled = !(apiKeyInput.value.trim() && uploadedText);
+}
+
+apiKeyInput.addEventListener('input', checkReady);
+
+// ===========================================================================
+//  错误显示
+// ===========================================================================
+function showError(msg) {
+  errorMsg.textContent = msg;
+  errorMsg.classList.add('active');
+}
+function hideError() {
+  errorMsg.classList.remove('active');
+}
+
+// ===========================================================================
+//  进度条控制
+// ===========================================================================
+function setProgress(percent, text) {
+  progressFill.style.width = percent + '%';
+  progressPercent.textContent = percent + '%';
+  if (text) progressText.textContent = text;
+}
+
+// ===========================================================================
+//  ★ 核心：智能语义分块函数
+//  -----------------------------------------------------------------
+//  分块依据：以双换行符 \n\n 拆分段落为最小单位。
+//  累加规则：逐段累加，直到总字数接近 5000 字（允许 ±300 字浮动）。
+//  强制断句边界：切割点绝不能卡在句子中间，必须以中文标点（。！？…）
+//  或英文句号（.）作为该块的强制结束符。
+//  宁可让该块多几十个字，也要保证每一块都以完整句子结尾。
+// ===========================================================================
+function smartChunk(text) {
+  // 目标块大小和浮动范围
+  const TARGET_SIZE = 5000;
+  const TOLERANCE   = 300;
+  const MIN_SIZE    = TARGET_SIZE - TOLERANCE; // 4700
+  const MAX_SIZE    = TARGET_SIZE + TOLERANCE; // 5300
+
+  // 句末标点正则：中文句号、感叹号、问号、省略号，以及英文句号
+  const SENTENCE_END = /[。！？…\.]/;
+
+  // 按双换行拆分段落（过滤空段落）
+  const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0);
+
+  const chunks = [];
+  let currentChunk = '';
+
+  for (let i = 0; i < paragraphs.length; i++) {
+    const para = paragraphs[i].trim();
+
+    // 如果当前块加上这一段还没超过上限，直接累加
+    if (currentChunk.length + para.length + 1 <= MAX_SIZE) {
+      currentChunk += (currentChunk ? '\n\n' : '') + para;
+      continue;
+    }
+
+    // 如果当前块已经达到最小阈值，先把当前块做断句处理并保存
+    if (currentChunk.length >= MIN_SIZE) {
+      chunks.push(ensureSentenceEnd(currentChunk));
+      currentChunk = para;
+      continue;
+    }
+
+    // 当前块不够最小阈值，但加上本段会超过上限
+    // 尝试把本段部分文字追加进来，并在句末处截断
+    currentChunk += (currentChunk ? '\n\n' : '') + para;
+    // 向后扫描找到一个合适的句末断点
+    const cutPoint = findSentenceBreak(currentChunk, MIN_SIZE, currentChunk.length);
+    chunks.push(currentChunk.substring(0, cutPoint + 1));
+    const remainder = currentChunk.substring(cutPoint + 1).trim();
+    currentChunk = remainder;
+  }
+
+  // 处理最后剩余的文本
+  if (currentChunk.trim().length > 0) {
+    // 如果最后一块太短（少于500字），合并到前一块
+    if (chunks.length > 0 && currentChunk.length < 500) {
+      chunks[chunks.length - 1] += '\n\n' + currentChunk.trim();
+    } else {
+      chunks.push(currentChunk.trim());
+    }
+  }
+
+  return chunks;
+}
+
+/**
+ * 确保文本以完整句子结尾。
+ * 从文本末尾向前搜索句末标点，如果最后一个字符本身就是标点则直接返回。
+ * 否则截断到最近的句末标点位置。
+ */
+function ensureSentenceEnd(text) {
+  if (!text) return text;
+  const lastChar = text[text.length - 1];
+  if (/[。！？…\.]/.test(lastChar)) return text;
+
+  // 从末尾向前查找最近的句末标点
+  for (let i = text.length - 1; i >= 0; i--) {
+    if (/[。！？…\.]/.test(text[i])) {
+      return text.substring(0, i + 1);
+    }
+  }
+  // 如果整段都没有句末标点，原样返回
+  return text;
+}
+
+/**
+ * 在 text 中从 startPos 到 endPos 范围内寻找最后一个句末标点的位置。
+ * 用于在目标范围内找到最佳分割点。
+ */
+function findSentenceBreak(text, startPos, endPos) {
+  // 从 endPos 向前找句末标点
+  for (let i = endPos - 1; i >= startPos; i--) {
+    if (/[。！？…\.]/.test(text[i])) {
+      return i;
+    }
+  }
+  // 没找到的话，扩大范围从 startPos 向前找
+  for (let i = startPos - 1; i >= 0; i--) {
+    if (/[。！？…\.]/.test(text[i])) {
+      return i;
+    }
+  }
+  // 实在找不到，返回 endPos
+  return endPos - 1;
+}
+
+// ===========================================================================
+//  ★ DeepSeek API 调用封装
+//  -----------------------------------------------------------------
+//  使用 DeepSeek Chat Completions API（兼容 OpenAI 格式）
+//  默认模型：deepseek-chat
+// ===========================================================================
+async function callDeepSeek(apiKey, messages, maxTokens = 4096) {
+  const response = await fetch('https://api.deepseek.com/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: messages,
+      max_tokens: maxTokens,
+      temperature: 0.7
+    }),
+    signal: abortController?.signal
+  });
+
+  if (!response.ok) {
+    const errBody = await response.text();
+    if (response.status === 401) throw new Error('API Key 无效，请检查后重试');
+    if (response.status === 429) throw new Error('请求频率过高，请稍后再试');
+    throw new Error(`API 请求失败 (${response.status}): ${errBody}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
+
+// ===========================================================================
+//  ★ 主流程：生成读书笔记
+//  -----------------------------------------------------------------
+//  步骤：
+//    1. 对全文进行智能分块
+//    2. 逐块调用 AI 提取摘要
+//    3. 汇总所有摘要，生成六大模块报告
+// ===========================================================================
+startBtn.addEventListener('click', async () => {
+  const apiKey = apiKeyInput.value.trim();
+  if (!apiKey) { showError('请输入 DeepSeek API Key'); return; }
+  if (!uploadedText) { showError('请先上传 .txt 文件'); return; }
+
+  hideError();
+  startBtn.disabled = true;
+  reportSection.classList.remove('active');
+  progressSection.classList.add('active');
+  setProgress(0, '正在分析文本结构...');
+
+  abortController = new AbortController();
+
+  try {
+    // ========== 第1步：智能分块 ==========
+    setProgress(5, '正在对全文进行智能分块...');
+    const chunks = smartChunk(uploadedText);
+    const totalChunks = chunks.length;
+    setProgress(10, `全文已分为 ${totalChunks} 个语义块，开始逐块分析...`);
+
+    // ========== 第2步：逐块提取摘要 ==========
+    const summaries = [];
+    for (let i = 0; i < totalChunks; i++) {
+      const chunkIndex = i + 1;
+      // 进度映射：10% ~ 60% 给逐块摘要
+      const chunkProgress = Math.round(10 + (i / totalChunks) * 50);
+      setProgress(chunkProgress, `正在分析第 ${chunkIndex}/${totalChunks} 个文本块...`);
+
+      const prompt = `你是一位专业的文学分析助手。以下是一本小说中的第 ${chunkIndex}/${totalChunks} 段内容。
+请提取以下要点，用精炼的中文回答：
+1. 本段的主要情节概述（100字左右）
+2. 出现的主要人物及其行为
+3. 值得关注的精彩语句（如有，请原文摘录）
+4. 本段体现的主题或情感基调
+
+原文内容：
+${chunks[i]}`;
+
+      const summary = await callDeepSeek(apiKey, [
+        { role: 'system', content: '你是一位资深文学评论家和读书笔记专家。请用简洁、精炼的中文回答。' },
+        { role: 'user', content: prompt }
+      ]);
+
+      summaries.push(`【第${chunkIndex}块摘要】\n${summary}`);
+    }
+
+    // ========== 第3步：汇总生成六大模块 ==========
+    setProgress(62, '所有文本块分析完毕，正在生成全书概览...');
+
+    // 将所有摘要合并为总纲要
+    const allSummaries = summaries.join('\n\n---\n\n');
+
+    // ----- 模块1：全书概览 -----
+    setProgress(65, '正在生成全书概览...');
+    const overviewResult = await callDeepSeek(apiKey, [
+      { role: 'system', content: '你是一位资深文学评论家。' },
+      { role: 'user', content: `以下是一本小说各部分的摘要。请生成"全书概览"：
+1. 一句话总结全书内容
+2. 核心主旨
+
+总字数控制在100字以内，直接输出内容，不要加标题。
+
+各部分摘要：
+${allSummaries}` }
+    ]);
+    $('mod-overview').textContent = overviewResult;
+
+    // ----- 模块2：情节脉络 -----
+    setProgress(72, '正在梳理情节脉络...');
+    const plotResult = await callDeepSeek(apiKey, [
+      { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
+      { role: 'user', content: `以下是一本小说各部分的摘要。请按"开端-发展-高潮-结局"四个阶段梳理情节脉络，每阶段约50字。
+
+请严格按以下JSON格式返回（不要加其他文字）：
+{"开端":"...","发展":"...","高潮":"...","结局":"..."}
+
+各部分摘要：
+${allSummaries}` }
+    ]);
+    renderPlot(plotResult);
+
+    // ----- 模块3：人物图谱 -----
+    setProgress(79, '正在分析人物关系...');
+    const charResult = await callDeepSeek(apiKey, [
+      { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
+      { role: 'user', content: `以下是一本小说各部分的摘要。请列出前5个主要人物，每人附一句性格标签，并在最后用一段文字描述人物之间的关系网。
+
+请严格按以下JSON格式返回（不要加其他文字）：
+{"characters":[{"name":"姓名","trait":"性格标签"}],"relations":"人物关系描述..."}
+
+各部分摘要：
+${allSummaries}` }
+    ]);
+    renderCharacters(charResult);
+
+    // ----- 模块4：经典语录 -----
+    setProgress(85, '正在摘录经典语录...');
+    const quoteResult = await callDeepSeek(apiKey, [
+      { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
+      { role: 'user', content: `以下是一本小说各部分的摘要（其中可能包含原文摘录）。请挑选全书最精彩的5句话，附带大致出处位置。
+
+请严格按以下JSON格式返回（不要加其他文字）：
+[{"quote":"原句","source":"出处（如：前半部分 / 中段 / 结尾等）"}]
+
+各部分摘要：
+${allSummaries}` }
+    ]);
+    renderQuotes(quoteResult);
+
+    // ----- 模块5：深度洞见 -----
+    setProgress(91, '正在撰写深度洞见...');
+    const insightResult = await callDeepSeek(apiKey, [
+      { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
+      { role: 'user', content: `以下是一本小说各部分的摘要。请从以下三个维度各写一段点评（每段80-120字）：
+1. 写作手法
+2. 社会隐喻
+3. 情感共鸣
+
+请严格按以下JSON格式返回（不要加其他文字）：
+{"writing":"...","metaphor":"...","emotion":"..."}
+
+各部分摘要：
+${allSummaries}` }
+    ]);
+    renderInsights(insightResult);
+
+    // ----- 模块6：读者标签 -----
+    setProgress(96, '正在生成读者标签...');
+    const tagResult = await callDeepSeek(apiKey, [
+      { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
+      { role: 'user', content: `以下是一本小说各部分的摘要。请为本书自动生成10个关键词标签，每个标签2-4个字。
+
+请严格按以下JSON格式返回（不要加其他文字）：
+["标签1","标签2","标签3","标签4","标签5","标签6","标签7","标签8","标签9","标签10"]
+
+各部分摘要：
+${allSummaries}` }
+    ]);
+    renderTags(tagResult);
+
+    // ========== 完成 ==========
+    setProgress(100, '读书笔记生成完毕！');
+    reportSection.classList.add('active');
+
+    // 滚动到报告区域
+    setTimeout(() => {
+      reportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 500);
+
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      setProgress(0, '已取消');
+    } else {
+      showError('生成失败：' + err.message);
+      setProgress(0, '生成失败');
+    }
+  } finally {
+    startBtn.disabled = false;
+    abortController = null;
+  }
+});
+
+// ===========================================================================
+//  渲染函数：将 AI 返回的 JSON 文本解析并渲染到对应模块
+// ===========================================================================
+
+/**
+ * 从AI回复中提取JSON内容（兼容 markdown 代码块包裹的情况）
+ */
+function extractJSON(text) {
+  // 尝试去掉可能的 markdown 代码块标记
+  let cleaned = text.trim();
+  cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+  return cleaned;
+}
+
+/**
+ * 渲染情节脉络（开端-发展-高潮-结局）
+ */
+function renderPlot(raw) {
+  const container = $('mod-plot');
+  try {
+    const data = JSON.parse(extractJSON(raw));
+    const stages = [
+      { label: '开端', text: data['开端'] || '' },
+      { label: '发展', text: data['发展'] || '' },
+      { label: '高潮', text: data['高潮'] || '' },
+      { label: '结局', text: data['结局'] || '' }
+    ];
+    container.innerHTML = stages.map(s => `
+      <div class="plot-stage">
+        <div class="stage-label">${s.label}</div>
+        <div class="stage-text">${escapeHTML(s.text)}</div>
+      </div>
+    `).join('');
+  } catch {
+    container.textContent = raw;
+  }
+}
+
+/**
+ * 渲染人物图谱
+ */
+function renderCharacters(raw) {
+  const container = $('mod-characters');
+  try {
+    const data = JSON.parse(extractJSON(raw));
+    let html = '<table class="char-table"><tr><th>人物</th><th>性格标签</th></tr>';
+    (data.characters || []).forEach(c => {
+      html += `<tr><td>${escapeHTML(c.name)}</td><td>${escapeHTML(c.trait)}</td></tr>`;
+    });
+    html += '</table>';
+    if (data.relations) {
+      html += `<p style="margin-top:12px;line-height:1.8;font-size:0.93rem;">${escapeHTML(data.relations)}</p>`;
+    }
+    container.innerHTML = html;
+  } catch {
+    container.textContent = raw;
+  }
+}
+
+/**
+ * 渲染经典语录
+ */
+function renderQuotes(raw) {
+  const container = $('mod-quotes');
+  try {
+    const data = JSON.parse(extractJSON(raw));
+    container.innerHTML = data.map(q => `
+      <div class="quote-item">
+        "${escapeHTML(q.quote)}"
+        <span class="source">—— ${escapeHTML(q.source)}</span>
+      </div>
+    `).join('');
+  } catch {
+    container.textContent = raw;
+  }
+}
+
+/**
+ * 渲染深度洞见
+ */
+function renderInsights(raw) {
+  const container = $('mod-insights');
+  try {
+    const data = JSON.parse(extractJSON(raw));
+    const dims = [
+      { title: '写作手法', text: data.writing || '' },
+      { title: '社会隐喻', text: data.metaphor || '' },
+      { title: '情感共鸣', text: data.emotion || '' }
+    ];
+    container.innerHTML = dims.map(d => `
+      <div class="insight-block">
+        <h4>${d.title}</h4>
+        <p>${escapeHTML(d.text)}</p>
+      </div>
+    `).join('');
+  } catch {
+    container.textContent = raw;
+  }
+}
+
+/**
+ * 渲染读者标签
+ */
+function renderTags(raw) {
+  const container = $('mod-tags');
+  try {
+    const data = JSON.parse(extractJSON(raw));
+    container.innerHTML = '<div class="tags-wrap">' +
+      data.map(t => `<span class="tag">${escapeHTML(t)}</span>`).join('') +
+      '</div>';
+  } catch {
+    container.textContent = raw;
+  }
+}
+
+/**
+ * HTML 转义，防止 XSS
+ */
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>
