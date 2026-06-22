@@ -808,6 +808,7 @@ startBtn.addEventListener('click', async () => {
     const TOTAL_BUDGET = 6000;
     const perChunkBudget = Math.max(120, Math.floor(TOTAL_BUDGET / totalChunks));
     const perFieldBudget = Math.max(30, Math.floor(perChunkBudget / 4));
+    const bookName = uploadedFileName || '未知书名';
 
     // 结构化数据收集：每个维度独立存储，供对应模块使用
     const allEvents = [];      // 情节事件链（用于概览 + 情节脉络）
@@ -833,12 +834,13 @@ startBtn.addEventListener('click', async () => {
         ? `\n前情提要：${prevSummary}\n请在此基础上分析本段新增内容。\n`
         : '';
 
-      const extractPrompt = `以下是一本小说中的第 ${chunkIndex}/${totalChunks} 段。${contextLine}
-请提取以下4个维度的信息，严格按JSON格式返回，每个字段不超过${perFieldBudget}字：
+      const charFieldBudget = Math.max(50, Math.floor(perFieldBudget * 1.5));
+      const extractPrompt = `以下是《${bookName}》的第 ${chunkIndex}/${totalChunks} 段。${contextLine}
+请提取以下4个维度的信息，严格按JSON格式返回：
 {
-  "events": "本段核心事件及因果关系",
-  "characters": "出场人物、行为、性格变化",
-  "technique": "值得注意的写作手法或修辞（如有）",
+  "events": "本段核心事件及因果关系（不超过${perFieldBudget}字）",
+  "characters": "出场人物全名、具体行为、性格表现（不超过${charFieldBudget}字）",
+  "technique": "值得注意的写作手法或修辞（不超过${perFieldBudget}字，如无则留空）",
   "mood": "情感基调关键词（2-4个词）"
 }
 
@@ -910,7 +912,7 @@ ${chunkRef}` }
     const modulePrompts = {
       overview: {
         system: '你是一位资深文学评论家。',
-        user: `以下是一本小说各段的核心事件链和情感基调。请生成"全书概览"：
+        user: `以下是《${bookName}》各段的核心事件链和情感基调。请生成"全书概览"：
 1. 一句话总结全书内容
 2. 核心主旨
 总字数控制在100字以内，直接输出内容，不要加标题。
@@ -922,7 +924,7 @@ ${eventsText}
       },
       plot: {
         system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
-        user: `以下是一本小说各段的核心事件（按顺序排列，带因果关系）。请按"开端-发展-高潮-结局"四个阶段梳理情节脉络，每阶段约50字。
+        user: `以下是《${bookName}》各段的核心事件（按顺序排列，带因果关系）。请按"开端-发展-高潮-结局"四个阶段梳理情节脉络，每阶段约50字。
 JSON格式：{"开端":"...","发展":"...","高潮":"...","结局":"..."}
 
 事件链：
@@ -930,15 +932,19 @@ ${eventsText}`
       },
       characters: {
         system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
-        user: `以下是一本小说各段的人物出场、行为及性格变化记录。列出前5个主要人物，每人附性格标签，并描述关系网。
+        user: `以下是《${bookName}》各段的人物出场、行为及性格变化记录。请严格根据以下数据分析，列出前5个主要人物，每人附性格标签，并描述关系网。
+注意：必须完全基于下方提供的数据，不要使用你自己对这本书的记忆或知识。
 JSON格式：{"characters":[{"name":"姓名","trait":"性格标签"}],"relations":"关系描述","edges":[{"from":"人名A","to":"人名B","label":"关系"}]}
 
 人物记录：
-${charsText}`
+${charsText}
+
+辅助事件链：
+${eventsText}`
       },
       quotes: {
         system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
-        user: `以下是从一本小说各片段中独立提取的候选精彩语句（均为原文）。请精选最精彩的5句，附带出处。
+        user: `以下是从《${bookName}》各片段中独立提取的候选精彩语句（均为原文）。请精选最精彩的5句，附带出处。
 
 候选语录：
 ${quoteCandidateText || '（无候选，请根据下方事件链推断可能的精彩语句并注明为推断）'}
@@ -950,7 +956,7 @@ JSON格式：[{"quote":"原句","source":"出处"}]`
       },
       insights: {
         system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
-        user: `以下分别是一本小说的写作手法观察和事件/情感记录。请从三个维度各写一段点评（每段80-120字）：
+        user: `以下分别是《${bookName}》的写作手法观察和事件/情感记录。请从三个维度各写一段点评（每段80-120字）：
 
 【写作手法原始记录】
 ${techText || '（未提取到明显手法特征）'}
@@ -963,7 +969,7 @@ JSON格式：{"writing":"...","metaphor":"...","emotion":"..."}`
       },
       tags: {
         system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
-        user: `以下是一本小说的事件链和情感基调。请生成10个关键词标签（每个2-4字）。
+        user: `以下是《${bookName}》的事件链和情感基调。请生成10个关键词标签（每个2-4字）。
 JSON格式：["标签1","标签2",...]
 
 事件链：
