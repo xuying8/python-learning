@@ -803,142 +803,173 @@ startBtn.addEventListener('click', async () => {
     const totalChunks = chunks.length;
     setProgress(10, `全文已分为 ${totalChunks} 个语义块，开始逐块分析...`);
 
-    // ===== 第2步：逐块分析 + 语录候选池收集（支持并发） =====
+    // ===== 第2步：自适应预算 + 滑动窗口 + 结构化提取 =====
+    // 自适应摘要预算：保证最终合并不超过 ~6000 字，无需二次压缩
+    const TOTAL_BUDGET = 6000;
+    const perChunkBudget = Math.max(120, Math.floor(TOTAL_BUDGET / totalChunks));
+    const perFieldBudget = Math.max(30, Math.floor(perChunkBudget / 4));
+
+    // 结构化数据收集：每个维度独立存储，供对应模块使用
+    const allEvents = [];      // 情节事件链（用于概览 + 情节脉络）
+    const allCharacters = [];  // 人物行为记录（用于人物图谱）
+    const allTechniques = [];  // 写作手法观察（用于深度洞见）
+    const allMoods = [];       // 情感基调（用于标签 + 洞见）
+
+    // 滑动窗口：上一块的摘要，为当前块提供上下文
+    let prevSummary = '';
     let completedChunks = 0;
 
-    const summaries = await parallelMap(chunks, async (chunk, i) => {
+    // 逐块顺序处理（需要滑动窗口，不能完全并行，但语录提取可以并行）
+    // 为了兼顾速度，摘要顺序执行以维护上下文，语录提取异步收集
+    const quotePromises = [];
+
+    for (let i = 0; i < totalChunks; i++) {
       const chunkIndex = i + 1;
+      const pct = Math.round(10 + (i / totalChunks) * 50);
+      setProgress(pct, `正在分析第 ${chunkIndex}/${totalChunks} 个文本块...`);
 
-      // 摘要请求
-      const summaryPrompt = `以下是一本小说中的第 ${chunkIndex}/${totalChunks} 段。请用不超过200字精炼总结：
-1. 情节概述（50字）
-2. 主要人物及行为（30字）
-3. 情感基调（10字）
+      // 结构化提取 prompt：要求返回4个维度的JSON
+      const contextLine = prevSummary
+        ? `\n前情提要：${prevSummary}\n请在此基础上分析本段新增内容。\n`
+        : '';
 
-严格控制在200字以内。
-
-原文：
-${chunk}`;
-
-      const summary = await callAI(config, [
-        { role: 'system', content: '你是读书笔记专家。回复不超过200字。' },
-        { role: 'user', content: summaryPrompt }
-      ], 800);
-
-      // 语录候选池：独立请求提取原文精彩语句
-      const quotePrompt = `从以下小说片段中摘录2-3句最精彩的原文语句（必须是原文原句，不要改写）。
-如果没有特别精彩的句子，返回空数组。
-严格按JSON格式返回：[{"quote":"原句","position":"第${chunkIndex}段"}]
-不要加其他文字。
+      const extractPrompt = `以下是一本小说中的第 ${chunkIndex}/${totalChunks} 段。${contextLine}
+请提取以下4个维度的信息，严格按JSON格式返回，每个字段不超过${perFieldBudget}字：
+{
+  "events": "本段核心事件及因果关系",
+  "characters": "出场人物、行为、性格变化",
+  "technique": "值得注意的写作手法或修辞（如有）",
+  "mood": "情感基调关键词（2-4个词）"
+}
 
 原文：
-${chunk}`;
+${chunks[i]}`;
+
+      const raw = await callAI(config, [
+        { role: 'system', content: `你是文学分析专家。严格返回JSON，每个字段不超过${perFieldBudget}字。不要加其他文字。` },
+        { role: 'user', content: extractPrompt }
+      ], 1024);
 
       try {
-        const quoteRaw = await callAI(config, [
-          { role: 'system', content: '你是文学鉴赏专家。严格返回JSON数组，不加其他文字。' },
-          { role: 'user', content: quotePrompt }
-        ], 600);
-        const parsed = JSON.parse(extractJSON(quoteRaw));
-        if (Array.isArray(parsed)) quoteCandidates.push(...parsed);
-      } catch {}
+        const parsed = JSON.parse(extractJSON(raw));
+        const tag = `[${chunkIndex}/${totalChunks}]`;
+        if (parsed.events) allEvents.push(`${tag} ${parsed.events}`);
+        if (parsed.characters) allCharacters.push(`${tag} ${parsed.characters}`);
+        if (parsed.technique) allTechniques.push(`${tag} ${parsed.technique}`);
+        if (parsed.mood) allMoods.push(parsed.mood);
+        // 更新滑动窗口
+        prevSummary = parsed.events || '';
+      } catch {
+        // JSON 解析失败，把原文当纯文本摘要处理
+        allEvents.push(`[${chunkIndex}/${totalChunks}] ${raw.substring(0, perFieldBudget)}`);
+        prevSummary = raw.substring(0, 80);
+      }
+
+      // 语录候选池：异步提取，不阻塞主流程
+      const chunkRef = chunks[i];
+      const ci = chunkIndex;
+      quotePromises.push((async () => {
+        try {
+          const quoteRaw = await callAI(config, [
+            { role: 'system', content: '你是文学鉴赏专家。严格返回JSON数组，不加其他文字。' },
+            { role: 'user', content: `从以下小说片段中摘录2-3句最精彩的原文语句（必须是原文原句，不要改写）。
+如果没有特别精彩的句子，返回空数组。
+严格按JSON格式返回：[{"quote":"原句","position":"第${ci}段"}]
+
+原文：
+${chunkRef}` }
+          ], 600);
+          const parsed = JSON.parse(extractJSON(quoteRaw));
+          if (Array.isArray(parsed)) quoteCandidates.push(...parsed);
+        } catch {}
+      })());
 
       completedChunks++;
-      const pct = Math.round(10 + (completedChunks / totalChunks) * 50);
-      setProgress(pct, `正在分析第 ${completedChunks}/${totalChunks} 个文本块...`);
-
-      return `【第${chunkIndex}块】${summary}`;
-    }, config.concurrency);
-
-    // ===== 第3步：摘要压缩 =====
-    setProgress(62, '所有文本块分析完毕，正在压缩汇总...');
-    const MAX_SUMMARY_LEN = 6000;
-    let allSummaries = summaries.join('\n\n');
-
-    if (allSummaries.length > MAX_SUMMARY_LEN) {
-      setProgress(63, `摘要 ${(allSummaries.length/10000).toFixed(1)} 万字，二次压缩中...`);
-      const groups = [];
-      let cg = '';
-      for (const s of summaries) {
-        if (cg.length + s.length + 2 > MAX_SUMMARY_LEN && cg) { groups.push(cg); cg = s; }
-        else cg += (cg ? '\n\n' : '') + s;
-      }
-      if (cg) groups.push(cg);
-
-      const condensed = await parallelMap(groups, async (group, g) => {
-        setProgress(Math.round(63 + (g / groups.length) * 2), `压缩第 ${g+1}/${groups.length} 组...`);
-        return callAI(config, [
-          { role: 'system', content: '将以下摘要合并压缩为不超过500字的总结，保留关键情节、人物和语句。' },
-          { role: 'user', content: group }
-        ], 1024);
-      }, config.concurrency);
-
-      allSummaries = condensed.join('\n\n---\n\n');
     }
 
-    // ===== 第4步：6大模块并行生成（带单模块容错） =====
-    setProgress(66, '正在并行生成六大模块...');
+    // 等待所有语录提取完成
+    setProgress(62, '正在收集语录候选...');
+    await Promise.all(quotePromises);
 
-    // 语录候选池文本
+    // ===== 第3步：构建模块专属数据（无需二次压缩） =====
+    setProgress(65, '数据收集完毕，正在生成报告...');
+
+    const eventsText = allEvents.join('\n');
+    const charsText = allCharacters.join('\n');
+    const techText = allTechniques.join('\n');
+    const moodText = allMoods.join('；');
+    // 通用摘要（概览和标签用）
+    const overviewText = allEvents.map((e, i) => e).join('\n');
+
     const topQuotes = quoteCandidates.slice(0, 30);
     const quoteCandidateText = topQuotes.map(q => `"${q.quote}" —— ${q.position}`).join('\n');
+
+    // ===== 第4步：6大模块并行生成（每个模块只拿对应维度数据） =====
+    setProgress(68, '正在并行生成六大模块...');
 
     const modulePrompts = {
       overview: {
         system: '你是一位资深文学评论家。',
-        user: `以下是一本小说各部分的摘要。请生成"全书概览"：
+        user: `以下是一本小说各段的核心事件链和情感基调。请生成"全书概览"：
 1. 一句话总结全书内容
 2. 核心主旨
 总字数控制在100字以内，直接输出内容，不要加标题。
 
-各部分摘要：
-${allSummaries}`
+事件链：
+${eventsText}
+
+情感基调：${moodText}`
       },
       plot: {
         system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
-        user: `以下是一本小说各部分的摘要。请按"开端-发展-高潮-结局"四个阶段梳理情节脉络，每阶段约50字。
+        user: `以下是一本小说各段的核心事件（按顺序排列，带因果关系）。请按"开端-发展-高潮-结局"四个阶段梳理情节脉络，每阶段约50字。
 JSON格式：{"开端":"...","发展":"...","高潮":"...","结局":"..."}
 
-摘要：
-${allSummaries}`
+事件链：
+${eventsText}`
       },
       characters: {
         system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
-        user: `以下是一本小说各部分的摘要。列出前5个主要人物，每人附性格标签，并描述人物关系网。同时为每对有关系的人物标注关系类型。
+        user: `以下是一本小说各段的人物出场、行为及性格变化记录。列出前5个主要人物，每人附性格标签，并描述关系网。
 JSON格式：{"characters":[{"name":"姓名","trait":"性格标签"}],"relations":"关系描述","edges":[{"from":"人名A","to":"人名B","label":"关系"}]}
 
-摘要：
-${allSummaries}`
+人物记录：
+${charsText}`
       },
       quotes: {
         system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
-        user: `以下是从一本小说各片段中独立提取的候选精彩语句。请从中精选最精彩的5句，附带出处。
-如果候选不足5句，从摘要内容补充。
+        user: `以下是从一本小说各片段中独立提取的候选精彩语句（均为原文）。请精选最精彩的5句，附带出处。
 
 候选语录：
-${quoteCandidateText || '（无候选）'}
+${quoteCandidateText || '（无候选，请根据下方事件链推断可能的精彩语句并注明为推断）'}
 
-辅助摘要：
-${allSummaries}
+辅助事件链：
+${eventsText}
 
 JSON格式：[{"quote":"原句","source":"出处"}]`
       },
       insights: {
         system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
-        user: `以下是一本小说各部分的摘要。请从三个维度各写一段点评（每段80-120字）：
-1. 写作手法  2. 社会隐喻  3. 情感共鸣
-JSON格式：{"writing":"...","metaphor":"...","emotion":"..."}
+        user: `以下分别是一本小说的写作手法观察和事件/情感记录。请从三个维度各写一段点评（每段80-120字）：
 
-摘要：
-${allSummaries}`
+【写作手法原始记录】
+${techText || '（未提取到明显手法特征）'}
+
+【事件与情感】
+${eventsText}
+情感基调：${moodText}
+
+JSON格式：{"writing":"...","metaphor":"...","emotion":"..."}`
       },
       tags: {
         system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
-        user: `以下是一本小说各部分的摘要。请生成10个关键词标签（每个2-4字）。
+        user: `以下是一本小说的事件链和情感基调。请生成10个关键词标签（每个2-4字）。
 JSON格式：["标签1","标签2",...]
 
-摘要：
-${allSummaries}`
+事件链：
+${eventsText}
+
+情感基调：${moodText}`
       }
     };
 
