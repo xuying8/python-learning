@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI 智能读书笔记生成器</title>
 <style>
-  /* ========== 全局样式：复古手账风格 ========== */
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
@@ -21,7 +20,6 @@
     padding: 40px 20px 80px;
   }
 
-  /* ========== 标题区 ========== */
   header {
     text-align: center;
     margin-bottom: 36px;
@@ -29,24 +27,13 @@
     border-bottom: 2px dashed #c8b890;
   }
 
-  header h1 {
-    font-size: 2rem;
-    letter-spacing: 4px;
-    color: #5a4632;
-    margin-bottom: 8px;
-  }
+  header h1 { font-size: 2rem; letter-spacing: 4px; color: #5a4632; margin-bottom: 8px; }
+  header p { font-size: 0.95rem; color: #8a7a66; font-style: italic; }
 
-  header p {
-    font-size: 0.95rem;
-    color: #8a7a66;
-    font-style: italic;
-  }
-
-  /* ========== 输入区卡片 ========== */
   .card {
     background: #fffdf7;
     border-radius: 14px;
-    box-shadow: 0 2px 12px rgba(90, 70, 50, 0.10);
+    box-shadow: 0 2px 12px rgba(90,70,50,0.10);
     padding: 28px 32px;
     margin-bottom: 24px;
     border: 1px solid #e8dfcf;
@@ -56,436 +43,274 @@
   .card::before {
     content: '';
     position: absolute;
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
+    top: 12px; left: 12px; right: 12px; bottom: 12px;
     border: 1px dashed #e0d5c3;
     border-radius: 8px;
     pointer-events: none;
   }
 
   .card h2 {
-    font-size: 1.15rem;
-    color: #6b5744;
-    margin-bottom: 18px;
-    padding-left: 12px;
-    border-left: 4px solid #c8a96e;
+    font-size: 1.15rem; color: #6b5744; margin-bottom: 18px;
+    padding-left: 12px; border-left: 4px solid #c8a96e;
   }
 
-  /* ========== 表单元素 ========== */
   label {
-    display: block;
-    font-size: 0.9rem;
-    color: #7a6b58;
-    margin-bottom: 6px;
-    margin-top: 14px;
+    display: block; font-size: 0.9rem; color: #7a6b58;
+    margin-bottom: 6px; margin-top: 14px;
   }
-
   label:first-of-type { margin-top: 0; }
 
-  input[type="password"],
-  input[type="text"],
-  select {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1px solid #d4c9b5;
-    border-radius: 8px;
-    background: #fdfbf6;
-    font-family: inherit;
-    font-size: 0.95rem;
-    color: #3e3529;
-    outline: none;
-    transition: border-color 0.2s;
+  input[type="password"], input[type="text"], select, textarea {
+    width: 100%; padding: 10px 14px;
+    border: 1px solid #d4c9b5; border-radius: 8px;
+    background: #fdfbf6; font-family: inherit;
+    font-size: 0.95rem; color: #3e3529;
+    outline: none; transition: border-color 0.2s;
   }
-
-  input:focus, select:focus { border-color: #c8a96e; }
+  input:focus, select:focus, textarea:focus { border-color: #c8a96e; }
 
   select {
-    cursor: pointer;
-    appearance: none;
+    cursor: pointer; appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7a66' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
+    background-repeat: no-repeat; background-position: right 14px center;
     padding-right: 36px;
   }
 
-  /* ========== 高级设置折叠区 ========== */
   .advanced-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 18px;
-    cursor: pointer;
-    font-size: 0.88rem;
-    color: #8a7a66;
-    user-select: none;
-    border: none;
-    background: none;
-    font-family: inherit;
-    padding: 0;
+    display: flex; align-items: center; gap: 6px; margin-top: 18px;
+    cursor: pointer; font-size: 0.88rem; color: #8a7a66;
+    user-select: none; border: none; background: none;
+    font-family: inherit; padding: 0;
   }
-
   .advanced-toggle:hover { color: #6b5744; }
-
   .advanced-toggle .arrow {
-    display: inline-block;
-    transition: transform 0.2s;
-    font-size: 0.7rem;
+    display: inline-block; transition: transform 0.2s; font-size: 0.7rem;
   }
-
   .advanced-toggle.open .arrow { transform: rotate(90deg); }
 
-  .advanced-fields {
-    display: none;
-    margin-top: 4px;
-    padding-top: 4px;
-  }
-
+  .advanced-fields { display: none; margin-top: 4px; padding-top: 4px; }
   .advanced-fields.open { display: block; }
 
-  .field-hint {
-    font-size: 0.78rem;
-    color: #a09080;
-    margin-top: 3px;
-  }
+  .field-hint { font-size: 0.78rem; color: #a09080; margin-top: 3px; }
 
-  .row-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
-
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .row-2 > div label:first-of-type { margin-top: 14px; }
 
-  /* ========== 文件上传区 ========== */
   .upload-zone {
-    margin-top: 14px;
-    border: 2px dashed #cfc1a8;
-    border-radius: 12px;
-    padding: 36px 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
-    position: relative;
+    margin-top: 14px; border: 2px dashed #cfc1a8; border-radius: 12px;
+    padding: 36px 20px; text-align: center; cursor: pointer;
+    transition: background 0.2s, border-color 0.2s; position: relative;
   }
-
-  .upload-zone:hover,
-  .upload-zone.dragover {
-    background: #f5eedf;
-    border-color: #c8a96e;
-  }
-
-  .upload-zone .icon {
-    font-size: 2.4rem;
-    margin-bottom: 8px;
-    display: block;
-    opacity: 0.55;
-  }
-
-  .upload-zone .hint {
-    font-size: 0.9rem;
-    color: #9a8b78;
-  }
-
+  .upload-zone:hover, .upload-zone.dragover { background: #f5eedf; border-color: #c8a96e; }
+  .upload-zone .icon { font-size: 2.4rem; margin-bottom: 8px; display: block; opacity: 0.55; }
+  .upload-zone .hint { font-size: 0.9rem; color: #9a8b78; }
   .upload-zone .file-name {
-    margin-top: 10px;
-    font-size: 0.92rem;
-    color: #6b5744;
-    font-weight: bold;
-    word-break: break-all;
+    margin-top: 10px; font-size: 0.92rem; color: #6b5744;
+    font-weight: bold; word-break: break-all;
   }
+  .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
-  .upload-zone input[type="file"] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
+  .checkbox-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 16px; cursor: pointer; user-select: none;
+    font-size: 0.9rem; color: #7a6b58;
   }
+  .checkbox-row input[type="checkbox"] { width: auto; accent-color: #c8a96e; transform: scale(1.2); }
+  .checkbox-row .sub { font-size: 0.78rem; color: #a09080; }
 
-  /* ========== 按钮 ========== */
   .btn {
-    display: block;
-    width: 100%;
-    padding: 14px;
-    margin-top: 22px;
-    border: none;
-    border-radius: 10px;
-    font-family: inherit;
-    font-size: 1.05rem;
-    font-weight: bold;
-    letter-spacing: 2px;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
+    display: block; width: 100%; padding: 14px; margin-top: 22px;
+    border: none; border-radius: 10px; font-family: inherit;
+    font-size: 1.05rem; font-weight: bold; letter-spacing: 2px;
+    cursor: pointer; transition: background 0.2s, transform 0.1s;
   }
-
   .btn-primary {
     background: linear-gradient(135deg, #c8a96e, #a3854a);
-    color: #fff;
-    box-shadow: 0 3px 10px rgba(163, 133, 74, 0.3);
+    color: #fff; box-shadow: 0 3px 10px rgba(163,133,74,0.3);
   }
-
   .btn-primary:hover:not(:disabled) {
     background: linear-gradient(135deg, #b89a5e, #8f7340);
     transform: translateY(-1px);
   }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .btn-cancel {
+    background: #e8dfcf; color: #6b5744; margin-top: 10px;
+    box-shadow: none; font-size: 0.92rem; letter-spacing: 1px;
   }
+  .btn-cancel:hover { background: #ddd3c2; }
 
-  /* ========== 进度条 ========== */
-  .progress-section {
-    display: none;
-    margin-top: 24px;
+  .btn-row { display: flex; gap: 12px; margin-top: 22px; }
+  .btn-row .btn { flex: 1; margin-top: 0; }
+
+  .btn-secondary {
+    background: #e8dfcf; color: #6b5744; box-shadow: none;
+    font-size: 0.92rem; letter-spacing: 1px;
   }
+  .btn-secondary:hover { background: #ddd3c2; }
 
+  .progress-section { display: none; margin-top: 24px; }
   .progress-section.active { display: block; }
 
   .progress-bar-wrap {
-    background: #ece4d4;
-    border-radius: 20px;
-    height: 22px;
-    overflow: hidden;
-    position: relative;
+    background: #ece4d4; border-radius: 20px; height: 22px;
+    overflow: hidden; position: relative;
   }
-
   .progress-bar-fill {
-    height: 100%;
-    width: 0%;
+    height: 100%; width: 0%;
     background: linear-gradient(90deg, #c8a96e, #d4b87a, #c8a96e);
     background-size: 200% 100%;
     animation: shimmer 1.5s ease infinite;
-    border-radius: 20px;
-    transition: width 0.4s ease;
+    border-radius: 20px; transition: width 0.4s ease;
   }
-
   @keyframes shimmer {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
   }
-
   .progress-text {
-    text-align: center;
-    font-size: 0.88rem;
-    color: #8a7a66;
-    margin-top: 10px;
-    min-height: 1.4em;
+    text-align: center; font-size: 0.88rem; color: #8a7a66;
+    margin-top: 10px; min-height: 1.4em;
   }
-
   .progress-percent {
-    text-align: center;
-    font-size: 0.82rem;
-    color: #a0927f;
-    margin-top: 4px;
+    text-align: center; font-size: 0.82rem; color: #a0927f; margin-top: 4px;
   }
 
-  /* ========== 报告区域 ========== */
   .report-section { display: none; }
   .report-section.active { display: block; }
-
   .report-section > h2 {
-    text-align: center;
-    font-size: 1.5rem;
-    color: #5a4632;
-    margin: 40px 0 24px;
-    letter-spacing: 3px;
+    text-align: center; font-size: 1.5rem; color: #5a4632;
+    margin: 40px 0 24px; letter-spacing: 3px;
+  }
+  .report-section > h2::before, .report-section > h2::after {
+    content: ' \2726 '; font-size: 0.8rem; vertical-align: middle; color: #c8a96e;
   }
 
-  .report-section > h2::before,
-  .report-section > h2::after {
-    content: ' ✦ ';
-    font-size: 0.8rem;
-    vertical-align: middle;
-    color: #c8a96e;
-  }
-
-  /* ========== 模块卡片 ========== */
   .module-card {
-    background: #fffdf7;
-    border-radius: 14px;
-    box-shadow: 0 2px 12px rgba(90, 70, 50, 0.10);
-    padding: 26px 30px;
-    margin-bottom: 22px;
-    border: 1px solid #e8dfcf;
+    background: #fffdf7; border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(90,70,50,0.10);
+    padding: 26px 30px; margin-bottom: 22px; border: 1px solid #e8dfcf;
   }
-
   .module-card h3 {
-    font-size: 1.1rem;
-    color: #6b5744;
-    margin-bottom: 16px;
-    padding-bottom: 10px;
-    border-bottom: 1px dashed #ddd3c2;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 1.1rem; color: #6b5744; margin-bottom: 16px;
+    padding-bottom: 10px; border-bottom: 1px dashed #ddd3c2;
+    display: flex; align-items: center; gap: 8px;
   }
-
   .module-card h3 .badge {
-    display: inline-block;
-    background: #c8a96e;
-    color: #fff;
-    font-size: 0.72rem;
-    padding: 2px 10px;
-    border-radius: 20px;
-    font-weight: normal;
-    letter-spacing: 1px;
+    display: inline-block; background: #c8a96e; color: #fff;
+    font-size: 0.72rem; padding: 2px 10px; border-radius: 20px;
+    font-weight: normal; letter-spacing: 1px;
   }
-
   .module-card .content {
-    font-size: 0.95rem;
-    line-height: 1.85;
-    color: #4a3f33;
-    white-space: pre-wrap;
-    word-break: break-word;
+    font-size: 0.95rem; line-height: 1.85; color: #4a3f33;
+    white-space: pre-wrap; word-break: break-word;
   }
-
-  /* ---- 人物图谱表格 ---- */
-  .char-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 14px;
+  .module-card .module-error {
+    color: #b44; background: #fff0f0; border: 1px solid #e8c0c0;
+    border-radius: 8px; padding: 10px 14px; font-size: 0.88rem;
   }
-
-  .char-table th,
-  .char-table td {
-    text-align: left;
-    padding: 8px 12px;
-    border-bottom: 1px solid #e8dfcf;
-    font-size: 0.92rem;
-  }
-
-  .char-table th {
-    color: #8a7a66;
-    font-weight: normal;
+  .module-card .module-error button {
+    margin-top: 6px; background: none; border: 1px solid #c88; color: #b44;
+    border-radius: 6px; padding: 4px 12px; cursor: pointer; font-family: inherit;
     font-size: 0.82rem;
-    letter-spacing: 1px;
   }
+  .module-card .module-error button:hover { background: #fff0f0; }
 
-  /* ---- 语录 ---- */
+  .char-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+  .char-table th, .char-table td {
+    text-align: left; padding: 8px 12px;
+    border-bottom: 1px solid #e8dfcf; font-size: 0.92rem;
+  }
+  .char-table th { color: #8a7a66; font-weight: normal; font-size: 0.82rem; letter-spacing: 1px; }
+
   .quote-item {
-    padding: 14px 18px;
-    margin-bottom: 10px;
-    background: #f9f4e8;
-    border-radius: 8px;
-    border-left: 3px solid #c8a96e;
-    font-style: italic;
-    font-size: 0.93rem;
-    line-height: 1.75;
+    padding: 14px 18px; margin-bottom: 10px; background: #f9f4e8;
+    border-radius: 8px; border-left: 3px solid #c8a96e;
+    font-style: italic; font-size: 0.93rem; line-height: 1.75;
   }
-
   .quote-item .source {
-    display: block;
-    text-align: right;
-    font-style: normal;
-    font-size: 0.8rem;
-    color: #a0927f;
-    margin-top: 6px;
+    display: block; text-align: right; font-style: normal;
+    font-size: 0.8rem; color: #a0927f; margin-top: 6px;
   }
 
-  /* ---- 标签 ---- */
-  .tags-wrap {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
+  .tags-wrap { display: flex; flex-wrap: wrap; gap: 10px; }
   .tag {
-    display: inline-block;
-    padding: 6px 16px;
-    background: #f0e8d6;
-    color: #6b5744;
-    border-radius: 20px;
-    font-size: 0.88rem;
+    display: inline-block; padding: 6px 16px; background: #f0e8d6;
+    color: #6b5744; border-radius: 20px; font-size: 0.88rem;
     border: 1px solid #ddd3c2;
   }
 
-  /* ---- 洞见维度 ---- */
-  .insight-block {
-    margin-bottom: 16px;
-  }
-
+  .insight-block { margin-bottom: 16px; }
   .insight-block:last-child { margin-bottom: 0; }
+  .insight-block h4 { font-size: 0.95rem; color: #8a6e4a; margin-bottom: 6px; }
+  .insight-block p { font-size: 0.93rem; line-height: 1.8; color: #4a3f33; }
 
-  .insight-block h4 {
-    font-size: 0.95rem;
-    color: #8a6e4a;
-    margin-bottom: 6px;
-  }
-
-  .insight-block p {
-    font-size: 0.93rem;
-    line-height: 1.8;
-    color: #4a3f33;
-  }
-
-  /* ---- 情节阶段 ---- */
-  .plot-stage {
-    display: flex;
-    gap: 14px;
-    margin-bottom: 12px;
-    align-items: flex-start;
-  }
-
+  .plot-stage { display: flex; gap: 14px; margin-bottom: 12px; align-items: flex-start; }
   .plot-stage:last-child { margin-bottom: 0; }
-
   .plot-stage .stage-label {
-    flex-shrink: 0;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
+    flex-shrink: 0; width: 52px; height: 52px; border-radius: 50%;
     background: linear-gradient(135deg, #c8a96e, #a3854a);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.78rem;
-    font-weight: bold;
-    letter-spacing: 1px;
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 0.78rem; font-weight: bold; letter-spacing: 1px;
+  }
+  .plot-stage .stage-text { font-size: 0.93rem; line-height: 1.75; color: #4a3f33; padding-top: 12px; }
+
+  .relation-graph {
+    width: 100%; height: 300px; border-radius: 10px;
+    background: #faf7f0; border: 1px solid #e8dfcf; margin-top: 14px;
   }
 
-  .plot-stage .stage-text {
-    font-size: 0.93rem;
-    line-height: 1.75;
-    color: #4a3f33;
-    padding-top: 12px;
-  }
-
-  /* ========== 错误提示 ========== */
   .error-msg {
-    color: #b44;
-    background: #fff0f0;
-    border: 1px solid #e8c0c0;
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin-top: 14px;
-    font-size: 0.9rem;
-    display: none;
+    color: #b44; background: #fff0f0; border: 1px solid #e8c0c0;
+    border-radius: 8px; padding: 12px 16px; margin-top: 14px;
+    font-size: 0.9rem; display: none;
   }
-
   .error-msg.active { display: block; }
 
-  /* ========== 响应式 ========== */
+  .history-section { margin-top: 40px; }
+  .history-section h2 {
+    font-size: 1.15rem; color: #6b5744; margin-bottom: 14px;
+    padding-left: 12px; border-left: 4px solid #c8a96e;
+  }
+  .history-list { list-style: none; }
+  .history-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; background: #fffdf7; border: 1px solid #e8dfcf;
+    border-radius: 10px; margin-bottom: 8px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .history-item:hover { background: #f5eedf; }
+  .history-item .info { flex: 1; }
+  .history-item .title { font-size: 0.95rem; color: #5a4632; font-weight: bold; }
+  .history-item .meta { font-size: 0.78rem; color: #a09080; margin-top: 2px; }
+  .history-item .actions { display: flex; gap: 8px; }
+  .history-item .actions button {
+    background: none; border: 1px solid #d4c9b5; border-radius: 6px;
+    padding: 4px 10px; font-size: 0.78rem; color: #8a7a66;
+    cursor: pointer; font-family: inherit;
+  }
+  .history-item .actions button:hover { background: #f0e8d6; }
+  .history-item .actions button.del { color: #b44; border-color: #e8c0c0; }
+  .history-item .actions button.del:hover { background: #fff0f0; }
+
   @media (max-width: 600px) {
     .container { padding: 20px 12px 60px; }
     .card { padding: 20px 18px; }
     .module-card { padding: 20px 18px; }
     header h1 { font-size: 1.5rem; }
     .row-2 { grid-template-columns: 1fr; }
+    .btn-row { flex-direction: column; }
+    .relation-graph { height: 220px; }
   }
 </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- ===== 标题 ===== -->
   <header>
     <h1>AI 智能读书笔记生成器</h1>
     <p>上传小说全文，一键生成深度读书笔记</p>
   </header>
 
-  <!-- ===== 设置区 ===== -->
   <div class="card">
     <h2>模型设置</h2>
 
@@ -498,7 +323,6 @@
     <label for="apiKey">API Key</label>
     <input type="password" id="apiKey" placeholder="请输入 API Key">
 
-    <!-- 高级设置折叠 -->
     <button class="advanced-toggle" id="advancedToggle" type="button">
       <span class="arrow">&#9654;</span> 高级设置
     </button>
@@ -507,14 +331,20 @@
         <div>
           <label for="apiEndpoint">API 端点</label>
           <input type="text" id="apiEndpoint" placeholder="留空使用默认端点">
-          <div class="field-hint" id="endpointHint">默认：https://api.anthropic.com</div>
+          <div class="field-hint" id="endpointHint"></div>
         </div>
         <div>
           <label for="modelName">模型名称</label>
           <input type="text" id="modelName" placeholder="留空使用默认模型">
-          <div class="field-hint" id="modelHint">默认：claude-sonnet-4-20250514</div>
+          <div class="field-hint" id="modelHint"></div>
         </div>
       </div>
+      <label for="concurrency">并发请求数</label>
+      <select id="concurrency">
+        <option value="1">1（顺序执行，最稳定）</option>
+        <option value="2" selected>2（推荐）</option>
+        <option value="3">3（较快，注意限流）</option>
+      </select>
     </div>
 
     <label>上传小说全文（.txt）</label>
@@ -524,16 +354,22 @@
       <div class="file-name" id="fileName"></div>
       <input type="file" id="fileInput" accept=".txt">
     </div>
-    <label style="display:flex;align-items:center;gap:8px;margin-top:16px;cursor:pointer;user-select:none">
-      <input type="checkbox" id="limitText" style="width:auto;accent-color:#c8a96e;transform:scale(1.2)">
+
+    <label class="checkbox-row">
+      <input type="checkbox" id="limitText">
       <span>只分析前 5 万字</span>
-      <span style="font-size:0.78rem;color:#a09080">（适合超长小说，节省 Token 开销）</span>
+      <span class="sub">（适合超长小说，节省 Token）</span>
     </label>
-    <button class="btn btn-primary" id="startBtn" disabled>生 成 读 书 笔 记</button>
+
+    <div class="btn-row" id="btnRow">
+      <button class="btn btn-primary" id="startBtn" disabled>生 成 读 书 笔 记</button>
+    </div>
+    <div id="cancelWrap" style="display:none">
+      <button class="btn btn-cancel" id="cancelBtn">停 止 生 成</button>
+    </div>
     <div class="error-msg" id="errorMsg"></div>
   </div>
 
-  <!-- ===== 进度区 ===== -->
   <div class="progress-section" id="progressSection">
     <div class="card">
       <h2>生成进度</h2>
@@ -545,46 +381,33 @@
     </div>
   </div>
 
-  <!-- ===== 报告区 ===== -->
   <div class="report-section" id="reportSection">
     <h2>读 书 笔 记</h2>
 
-    <div class="module-card">
-      <h3><span class="badge">壹</span> 全书概览</h3>
-      <div class="content" id="mod-overview"></div>
+    <div class="btn-row" style="margin-bottom:22px;margin-top:0">
+      <button class="btn btn-secondary" id="exportMdBtn">导出 Markdown</button>
+      <button class="btn btn-secondary" id="exportHtmlBtn">导出 HTML</button>
     </div>
 
-    <div class="module-card">
-      <h3><span class="badge">贰</span> 情节脉络</h3>
-      <div class="content" id="mod-plot"></div>
-    </div>
+    <div class="module-card"><h3><span class="badge">壹</span> 全书概览</h3><div class="content" id="mod-overview"></div></div>
+    <div class="module-card"><h3><span class="badge">贰</span> 情节脉络</h3><div class="content" id="mod-plot"></div></div>
+    <div class="module-card"><h3><span class="badge">叁</span> 人物图谱</h3><div class="content" id="mod-characters"></div><canvas class="relation-graph" id="relationCanvas"></canvas></div>
+    <div class="module-card"><h3><span class="badge">肆</span> 经典语录</h3><div class="content" id="mod-quotes"></div></div>
+    <div class="module-card"><h3><span class="badge">伍</span> 深度洞见</h3><div class="content" id="mod-insights"></div></div>
+    <div class="module-card"><h3><span class="badge">陆</span> 读者标签</h3><div class="content" id="mod-tags"></div></div>
+  </div>
 
-    <div class="module-card">
-      <h3><span class="badge">叁</span> 人物图谱</h3>
-      <div class="content" id="mod-characters"></div>
-    </div>
-
-    <div class="module-card">
-      <h3><span class="badge">肆</span> 经典语录</h3>
-      <div class="content" id="mod-quotes"></div>
-    </div>
-
-    <div class="module-card">
-      <h3><span class="badge">伍</span> 深度洞见</h3>
-      <div class="content" id="mod-insights"></div>
-    </div>
-
-    <div class="module-card">
-      <h3><span class="badge">陆</span> 读者标签</h3>
-      <div class="content" id="mod-tags"></div>
-    </div>
+  <!-- 历史记录 -->
+  <div class="history-section" id="historySection" style="display:none">
+    <h2>历史记录</h2>
+    <ul class="history-list" id="historyList"></ul>
   </div>
 
 </div>
 
 <script>
 // ===========================================================================
-//  各 API 类型的默认端点和模型名称
+//  Provider 默认配置
 // ===========================================================================
 const PROVIDER_DEFAULTS = {
   anthropic: {
@@ -604,16 +427,19 @@ const PROVIDER_DEFAULTS = {
 };
 
 // ===========================================================================
-//  全局变量
+//  全局状态
 // ===========================================================================
 let uploadedText = '';
+let uploadedFileName = '';
 let abortController = null;
+let isGenerating = false;
+// 最近一次生成结果，用于导出
+let lastReport = null;
+// 语录候选池：在逐块分析时独立收集原文语录
+let quoteCandidates = [];
 
 const $ = id => document.getElementById(id);
 
-// ===========================================================================
-//  DOM 引用
-// ===========================================================================
 const apiProviderSel = $('apiProvider');
 const apiKeyInput    = $('apiKey');
 const apiEndpointInput = $('apiEndpoint');
@@ -622,11 +448,15 @@ const endpointHint   = $('endpointHint');
 const modelHint      = $('modelHint');
 const advancedToggle = $('advancedToggle');
 const advancedFields = $('advancedFields');
+const concurrencySel = $('concurrency');
 const limitTextCb    = $('limitText');
 const fileInput      = $('fileInput');
 const uploadZone     = $('uploadZone');
 const fileNameEl     = $('fileName');
 const startBtn       = $('startBtn');
+const cancelBtn      = $('cancelBtn');
+const cancelWrap     = $('cancelWrap');
+const btnRow         = $('btnRow');
 const errorMsg       = $('errorMsg');
 const progressSection = $('progressSection');
 const progressFill   = $('progressFill');
@@ -635,11 +465,11 @@ const progressPercent = $('progressPercent');
 const reportSection  = $('reportSection');
 
 // ===========================================================================
-//  localStorage 缓存键名
+//  localStorage 配置缓存
 // ===========================================================================
 const STORAGE_KEY = 'ai_reading_notes_config';
+const HISTORY_KEY = 'ai_reading_notes_history';
 
-// 从 localStorage 恢复用户上一次的配置
 function loadConfig() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -649,7 +479,7 @@ function loadConfig() {
     if (saved.endpoint) apiEndpointInput.value = saved.endpoint;
     if (saved.model) modelNameInput.value = saved.model;
     if (saved.limitText) limitTextCb.checked = saved.limitText;
-    // 如果有高级设置内容，自动展开
+    if (saved.concurrency) concurrencySel.value = saved.concurrency;
     if (saved.endpoint || saved.model) {
       advancedToggle.classList.add('open');
       advancedFields.classList.add('open');
@@ -658,118 +488,88 @@ function loadConfig() {
   } catch {}
 }
 
-// 保存当前配置到 localStorage
 function saveConfig() {
-  const config = {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
     provider: apiProviderSel.value,
     apiKey: apiKeyInput.value.trim(),
     endpoint: apiEndpointInput.value.trim(),
     model: modelNameInput.value.trim(),
-    limitText: limitTextCb.checked
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    limitText: limitTextCb.checked,
+    concurrency: concurrencySel.value
+  }));
 }
 
 // ===========================================================================
-//  API 类型切换 → 更新提示信息
+//  UI 联动
 // ===========================================================================
 function updateProviderUI() {
-  const defaults = PROVIDER_DEFAULTS[apiProviderSel.value];
-  endpointHint.textContent = defaults.endpointLabel;
-  modelHint.textContent = defaults.modelLabel;
-  apiKeyInput.placeholder = defaults.keyPlaceholder;
-  apiEndpointInput.placeholder = '留空使用默认端点';
-  modelNameInput.placeholder = '留空使用默认模型';
+  const d = PROVIDER_DEFAULTS[apiProviderSel.value];
+  endpointHint.textContent = d.endpointLabel;
+  modelHint.textContent = d.modelLabel;
+  apiKeyInput.placeholder = d.keyPlaceholder;
 }
 
-apiProviderSel.addEventListener('change', () => {
-  updateProviderUI();
-  saveConfig();
-  checkReady();
-});
-
-// 高级设置折叠
+apiProviderSel.addEventListener('change', () => { updateProviderUI(); saveConfig(); checkReady(); });
 advancedToggle.addEventListener('click', () => {
   advancedToggle.classList.toggle('open');
   advancedFields.classList.toggle('open');
 });
-
-// 输入变化时自动保存
 apiKeyInput.addEventListener('input', () => { saveConfig(); checkReady(); });
 apiEndpointInput.addEventListener('input', saveConfig);
 modelNameInput.addEventListener('input', saveConfig);
 limitTextCb.addEventListener('change', saveConfig);
+concurrencySel.addEventListener('change', saveConfig);
 
-// ===========================================================================
-//  获取当前生效的配置
-// ===========================================================================
 function getActiveConfig() {
-  const provider = apiProviderSel.value;
-  const defaults = PROVIDER_DEFAULTS[provider];
+  const p = apiProviderSel.value;
+  const d = PROVIDER_DEFAULTS[p];
   return {
-    provider,
+    provider: p,
     apiKey: apiKeyInput.value.trim(),
-    endpoint: apiEndpointInput.value.trim() || defaults.endpoint,
-    model: modelNameInput.value.trim() || defaults.model
+    endpoint: apiEndpointInput.value.trim() || d.endpoint,
+    model: modelNameInput.value.trim() || d.model,
+    concurrency: parseInt(concurrencySel.value) || 2
   };
 }
 
 // ===========================================================================
-//  文件上传处理
+//  文件上传
 // ===========================================================================
 fileInput.addEventListener('change', handleFile);
-
-uploadZone.addEventListener('dragover', e => {
-  e.preventDefault();
-  uploadZone.classList.add('dragover');
-});
-uploadZone.addEventListener('dragleave', () => {
-  uploadZone.classList.remove('dragover');
-});
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
 uploadZone.addEventListener('drop', e => {
-  e.preventDefault();
-  uploadZone.classList.remove('dragover');
-  if (e.dataTransfer.files.length) {
-    fileInput.files = e.dataTransfer.files;
-    handleFile();
-  }
+  e.preventDefault(); uploadZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; handleFile(); }
 });
 
 function handleFile() {
   const file = fileInput.files[0];
   if (!file) return;
-  if (!file.name.endsWith('.txt')) {
-    showError('请上传 .txt 格式的文本文件');
-    return;
-  }
+  if (!file.name.endsWith('.txt')) { showError('请上传 .txt 格式的文本文件'); return; }
   hideError();
   const reader = new FileReader();
   reader.onload = e => {
     uploadedText = e.target.result;
+    uploadedFileName = file.name.replace(/\.txt$/i, '');
     fileNameEl.textContent = `${file.name}（${(uploadedText.length / 10000).toFixed(1)} 万字）`;
     checkReady();
   };
   reader.readAsText(file, 'UTF-8');
 }
 
-function checkReady() {
-  startBtn.disabled = !(apiKeyInput.value.trim() && uploadedText);
-}
+function checkReady() { startBtn.disabled = !(apiKeyInput.value.trim() && uploadedText); }
+
+cancelBtn.addEventListener('click', () => {
+  if (abortController) abortController.abort();
+});
 
 // ===========================================================================
-//  错误显示
+//  错误 & 进度
 // ===========================================================================
-function showError(msg) {
-  errorMsg.textContent = msg;
-  errorMsg.classList.add('active');
-}
-function hideError() {
-  errorMsg.classList.remove('active');
-}
+function showError(msg) { errorMsg.textContent = msg; errorMsg.classList.add('active'); }
+function hideError() { errorMsg.classList.remove('active'); }
 
-// ===========================================================================
-//  进度条控制
-// ===========================================================================
 function setProgress(percent, text) {
   progressFill.style.width = percent + '%';
   progressPercent.textContent = percent + '%';
@@ -777,61 +577,70 @@ function setProgress(percent, text) {
 }
 
 // ===========================================================================
-//  ★ 核心：智能语义分块函数
-//  -----------------------------------------------------------------
-//  分块依据：以双换行符 \n\n 拆分段落为最小单位。
-//  累加规则：逐段累加，直到总字数接近 5000 字（允许 ±300 字浮动）。
-//  强制断句边界：切割点绝不能卡在句子中间，必须以中文标点（。！？…）
-//  或英文句号（.）作为该块的强制结束符。
-//  宁可让该块多几十个字，也要保证每一块都以完整句子结尾。
+//  Token 估算：中文字 ≈ 1.5 token，英文单词 ≈ 1 token
+// ===========================================================================
+function estimateTokens(text) {
+  let zhChars = 0, enWords = 0;
+  const matches = text.match(/[一-鿿㐀-䶿]/g);
+  zhChars = matches ? matches.length : 0;
+  const remaining = text.replace(/[一-鿿㐀-䶿]/g, ' ');
+  const words = remaining.trim().split(/\s+/).filter(w => w.length > 0);
+  enWords = words.length;
+  return Math.ceil(zhChars * 1.5 + enWords);
+}
+
+// ===========================================================================
+//  智能语义分块（基于 token 估算）
 // ===========================================================================
 function smartChunk(text) {
-  const TARGET_SIZE = 5000;
-  const TOLERANCE   = 300;
-  const MIN_SIZE    = TARGET_SIZE - TOLERANCE;
-  const MAX_SIZE    = TARGET_SIZE + TOLERANCE;
+  const TARGET_TOKENS = 3500;
+  const TOLERANCE = 300;
+  const MIN_TOKENS = TARGET_TOKENS - TOLERANCE;
+  const MAX_TOKENS = TARGET_TOKENS + TOLERANCE;
 
   const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0);
-
   const chunks = [];
   let currentChunk = '';
+  let currentTokens = 0;
 
-  for (let i = 0; i < paragraphs.length; i++) {
-    const para = paragraphs[i].trim();
+  for (const rawPara of paragraphs) {
+    const para = rawPara.trim();
+    const paraTokens = estimateTokens(para);
 
-    if (currentChunk.length + para.length + 1 <= MAX_SIZE) {
+    if (currentTokens + paraTokens <= MAX_TOKENS) {
       currentChunk += (currentChunk ? '\n\n' : '') + para;
+      currentTokens += paraTokens;
       continue;
     }
 
-    if (currentChunk.length >= MIN_SIZE) {
+    if (currentTokens >= MIN_TOKENS) {
       chunks.push(ensureSentenceEnd(currentChunk));
       currentChunk = para;
+      currentTokens = paraTokens;
       continue;
     }
 
     currentChunk += (currentChunk ? '\n\n' : '') + para;
-    const cutPoint = findSentenceBreak(currentChunk, MIN_SIZE, currentChunk.length);
+    currentTokens += paraTokens;
+    const cutPoint = findSentenceBreak(currentChunk, Math.floor(currentChunk.length * MIN_TOKENS / currentTokens), currentChunk.length);
     chunks.push(currentChunk.substring(0, cutPoint + 1));
-    const remainder = currentChunk.substring(cutPoint + 1).trim();
-    currentChunk = remainder;
+    currentChunk = currentChunk.substring(cutPoint + 1).trim();
+    currentTokens = estimateTokens(currentChunk);
   }
 
   if (currentChunk.trim().length > 0) {
-    if (chunks.length > 0 && currentChunk.length < 500) {
+    if (chunks.length > 0 && currentTokens < 300) {
       chunks[chunks.length - 1] += '\n\n' + currentChunk.trim();
     } else {
       chunks.push(currentChunk.trim());
     }
   }
-
   return chunks;
 }
 
 function ensureSentenceEnd(text) {
   if (!text) return text;
-  const lastChar = text[text.length - 1];
-  if (/[。！？…\.]/.test(lastChar)) return text;
+  if (/[。！？…\.]/.test(text[text.length - 1])) return text;
   for (let i = text.length - 1; i >= 0; i--) {
     if (/[。！？…\.]/.test(text[i])) return text.substring(0, i + 1);
   }
@@ -839,50 +648,50 @@ function ensureSentenceEnd(text) {
 }
 
 function findSentenceBreak(text, startPos, endPos) {
-  for (let i = endPos - 1; i >= startPos; i--) {
+  for (let i = endPos - 1; i >= Math.max(0, startPos); i--) {
     if (/[。！？…\.]/.test(text[i])) return i;
   }
-  for (let i = startPos - 1; i >= 0; i--) {
+  for (let i = Math.max(0, startPos) - 1; i >= 0; i--) {
     if (/[。！？…\.]/.test(text[i])) return i;
   }
   return endPos - 1;
 }
 
 // ===========================================================================
-//  ★ 统一 API 调用封装
-//  -----------------------------------------------------------------
-//  根据用户选择的 provider 类型，分别调用 Anthropic Messages API
-//  或 OpenAI 兼容的 Chat Completions API。
-//  支持自定义端点和模型名称。
+//  API 调用：带自动重试（429/网络错误最多重试3次，指数退避）
 // ===========================================================================
 async function callAI(config, messages, maxTokens = 4096) {
-  if (config.provider === 'anthropic') {
-    return callAnthropic(config, messages, maxTokens);
-  } else {
-    return callOpenAI(config, messages, maxTokens);
+  const maxRetries = 3;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      if (config.provider === 'anthropic') {
+        return await callAnthropic(config, messages, maxTokens);
+      } else {
+        return await callOpenAI(config, messages, maxTokens);
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') throw err;
+      const isRetryable = err.message.includes('429') || err.message.includes('网络') ||
+                          err.message.includes('fetch') || err.message.includes('Failed');
+      if (isRetryable && attempt < maxRetries) {
+        const wait = Math.pow(2, attempt + 1) * 1000;
+        await new Promise(r => setTimeout(r, wait));
+        continue;
+      }
+      throw err;
+    }
   }
 }
 
-// ---------- Anthropic Messages API ----------
 async function callAnthropic(config, messages, maxTokens) {
-  // 从 messages 中分离 system 和 user/assistant 消息
-  // Anthropic API 的 system 不在 messages 数组中，而是单独字段
   let systemPrompt = '';
   const apiMessages = [];
   for (const msg of messages) {
-    if (msg.role === 'system') {
-      systemPrompt += (systemPrompt ? '\n' : '') + msg.content;
-    } else {
-      apiMessages.push(msg);
-    }
+    if (msg.role === 'system') systemPrompt += (systemPrompt ? '\n' : '') + msg.content;
+    else apiMessages.push(msg);
   }
 
-  const body = {
-    model: config.model,
-    max_tokens: maxTokens,
-    messages: apiMessages,
-    temperature: 0.7
-  };
+  const body = { model: config.model, max_tokens: maxTokens, messages: apiMessages, temperature: 0.7 };
   if (systemPrompt) body.system = systemPrompt;
 
   const endpoint = config.endpoint.replace(/\/+$/, '');
@@ -901,38 +710,27 @@ async function callAnthropic(config, messages, maxTokens) {
   if (!response.ok) {
     const errBody = await response.text();
     if (response.status === 401) throw new Error('API Key 无效，请检查后重试');
-    if (response.status === 429) throw new Error('请求频率过高，请稍后再试');
+    if (response.status === 429) throw new Error('429 请求频率过高');
     throw new Error(`Anthropic API 请求失败 (${response.status}): ${errBody}`);
   }
 
   const data = await response.json();
-  // Anthropic 返回格式：{ content: [{ type: "text", text: "..." }] }
-  const textBlocks = (data.content || []).filter(b => b.type === 'text');
-  return textBlocks.map(b => b.text).join('');
+  return (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
 }
 
-// ---------- OpenAI 兼容 Chat Completions API ----------
 async function callOpenAI(config, messages, maxTokens) {
   const endpoint = config.endpoint.replace(/\/+$/, '');
   const response = await fetch(endpoint + '/chat/completions', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${config.apiKey}`
-    },
-    body: JSON.stringify({
-      model: config.model,
-      messages: messages,
-      max_tokens: maxTokens,
-      temperature: 0.7
-    }),
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
+    body: JSON.stringify({ model: config.model, messages, max_tokens: maxTokens, temperature: 0.7 }),
     signal: abortController?.signal
   });
 
   if (!response.ok) {
     const errBody = await response.text();
     if (response.status === 401) throw new Error('API Key 无效，请检查后重试');
-    if (response.status === 429) throw new Error('请求频率过高，请稍后再试');
+    if (response.status === 429) throw new Error('429 请求频率过高');
     throw new Error(`API 请求失败 (${response.status}): ${errBody}`);
   }
 
@@ -941,7 +739,29 @@ async function callOpenAI(config, messages, maxTokens) {
 }
 
 // ===========================================================================
-//  ★ 主流程：生成读书笔记
+//  并发控制器：限制同时请求数
+// ===========================================================================
+async function parallelMap(items, fn, concurrency) {
+  const results = new Array(items.length);
+  let nextIdx = 0;
+
+  async function worker() {
+    while (nextIdx < items.length) {
+      const idx = nextIdx++;
+      results[idx] = await fn(items[idx], idx);
+    }
+  }
+
+  const workers = [];
+  for (let i = 0; i < Math.min(concurrency, items.length); i++) {
+    workers.push(worker());
+  }
+  await Promise.all(workers);
+  return results;
+}
+
+// ===========================================================================
+//  ★ 主流程
 // ===========================================================================
 startBtn.addEventListener('click', async () => {
   const config = getActiveConfig();
@@ -950,308 +770,666 @@ startBtn.addEventListener('click', async () => {
 
   hideError();
   saveConfig();
+  isGenerating = true;
   startBtn.disabled = true;
+  btnRow.style.display = 'none';
+  cancelWrap.style.display = 'block';
   reportSection.classList.remove('active');
   progressSection.classList.add('active');
   setProgress(0, '正在分析文本结构...');
 
   abortController = new AbortController();
+  quoteCandidates = [];
+  lastReport = { title: uploadedFileName, date: new Date().toLocaleString('zh-CN') };
+
+  // 用于模块级容错
+  const moduleResults = {};
 
   try {
-    // ========== 第0步：如果开启了5万字限制，截断文本 ==========
+    // ===== 第0步：截断 =====
     let textToAnalyze = uploadedText;
-    const TEXT_LIMIT = 50000;
-    if (limitTextCb.checked && textToAnalyze.length > TEXT_LIMIT) {
-      // 在5万字附近找到句末标点截断，避免切在句子中间
-      let cutAt = TEXT_LIMIT;
-      for (let i = TEXT_LIMIT; i < Math.min(TEXT_LIMIT + 500, textToAnalyze.length); i++) {
+    if (limitTextCb.checked && textToAnalyze.length > 50000) {
+      let cutAt = 50000;
+      for (let i = 50000; i < Math.min(50500, textToAnalyze.length); i++) {
         if (/[。！？…\.]/.test(textToAnalyze[i])) { cutAt = i + 1; break; }
       }
       textToAnalyze = textToAnalyze.substring(0, cutAt);
-      setProgress(2, `已截取前 ${(cutAt / 10000).toFixed(1)} 万字进行分析...`);
+      setProgress(2, `已截取前 ${(cutAt/10000).toFixed(1)} 万字进行分析...`);
     }
 
-    // ========== 第1步：智能分块 ==========
+    // ===== 第1步：分块 =====
     setProgress(5, '正在对全文进行智能分块...');
     const chunks = smartChunk(textToAnalyze);
     const totalChunks = chunks.length;
     setProgress(10, `全文已分为 ${totalChunks} 个语义块，开始逐块分析...`);
 
-    // ========== 第2步：逐块提取摘要（要求简短，控制总量） ==========
-    const summaries = [];
-    for (let i = 0; i < totalChunks; i++) {
-      const chunkIndex = i + 1;
-      const chunkProgress = Math.round(10 + (i / totalChunks) * 50);
-      setProgress(chunkProgress, `正在分析第 ${chunkIndex}/${totalChunks} 个文本块...`);
+    // ===== 第2步：逐块分析 + 语录候选池收集（支持并发） =====
+    let completedChunks = 0;
 
-      const prompt = `以下是一本小说中的第 ${chunkIndex}/${totalChunks} 段内容。请用不超过200字精炼总结：
+    const summaries = await parallelMap(chunks, async (chunk, i) => {
+      const chunkIndex = i + 1;
+
+      // 摘要请求
+      const summaryPrompt = `以下是一本小说中的第 ${chunkIndex}/${totalChunks} 段。请用不超过200字精炼总结：
 1. 情节概述（50字）
 2. 主要人物及行为（30字）
-3. 精彩语句（如有，摘录1句原文）
-4. 情感基调（10字）
+3. 情感基调（10字）
 
-严格控制总字数在200字以内。
+严格控制在200字以内。
 
-原文内容：
-${chunks[i]}`;
+原文：
+${chunk}`;
 
       const summary = await callAI(config, [
-        { role: 'system', content: '你是读书笔记专家。请极度精炼，总回复不超过200字。' },
-        { role: 'user', content: prompt }
-      ], 1024);
+        { role: 'system', content: '你是读书笔记专家。回复不超过200字。' },
+        { role: 'user', content: summaryPrompt }
+      ], 800);
 
-      summaries.push(`【第${chunkIndex}块】${summary}`);
-    }
+      // 语录候选池：独立请求提取原文精彩语句
+      const quotePrompt = `从以下小说片段中摘录2-3句最精彩的原文语句（必须是原文原句，不要改写）。
+如果没有特别精彩的句子，返回空数组。
+严格按JSON格式返回：[{"quote":"原句","position":"第${chunkIndex}段"}]
+不要加其他文字。
 
-    // ========== 第3步：摘要压缩（防止超出上下文窗口） ==========
-    // 如果所有摘要拼接后超过6000字，分批再压缩一轮
+原文：
+${chunk}`;
+
+      try {
+        const quoteRaw = await callAI(config, [
+          { role: 'system', content: '你是文学鉴赏专家。严格返回JSON数组，不加其他文字。' },
+          { role: 'user', content: quotePrompt }
+        ], 600);
+        const parsed = JSON.parse(extractJSON(quoteRaw));
+        if (Array.isArray(parsed)) quoteCandidates.push(...parsed);
+      } catch {}
+
+      completedChunks++;
+      const pct = Math.round(10 + (completedChunks / totalChunks) * 50);
+      setProgress(pct, `正在分析第 ${completedChunks}/${totalChunks} 个文本块...`);
+
+      return `【第${chunkIndex}块】${summary}`;
+    }, config.concurrency);
+
+    // ===== 第3步：摘要压缩 =====
     setProgress(62, '所有文本块分析完毕，正在压缩汇总...');
-    const MAX_SUMMARY_LENGTH = 6000;
+    const MAX_SUMMARY_LEN = 6000;
     let allSummaries = summaries.join('\n\n');
 
-    if (allSummaries.length > MAX_SUMMARY_LENGTH) {
-      setProgress(63, `摘要总量 ${(allSummaries.length/10000).toFixed(1)} 万字，正在二次压缩...`);
-      // 将摘要分成若干组，每组不超过 MAX_SUMMARY_LENGTH 字，逐组压缩
+    if (allSummaries.length > MAX_SUMMARY_LEN) {
+      setProgress(63, `摘要 ${(allSummaries.length/10000).toFixed(1)} 万字，二次压缩中...`);
       const groups = [];
-      let currentGroup = '';
+      let cg = '';
       for (const s of summaries) {
-        if (currentGroup.length + s.length + 2 > MAX_SUMMARY_LENGTH && currentGroup) {
-          groups.push(currentGroup);
-          currentGroup = s;
-        } else {
-          currentGroup += (currentGroup ? '\n\n' : '') + s;
-        }
+        if (cg.length + s.length + 2 > MAX_SUMMARY_LEN && cg) { groups.push(cg); cg = s; }
+        else cg += (cg ? '\n\n' : '') + s;
       }
-      if (currentGroup) groups.push(currentGroup);
+      if (cg) groups.push(cg);
 
-      const condensed = [];
-      for (let g = 0; g < groups.length; g++) {
-        const gProgress = Math.round(63 + (g / groups.length) * 2);
-        setProgress(gProgress, `正在压缩第 ${g + 1}/${groups.length} 组摘要...`);
-        const result = await callAI(config, [
-          { role: 'system', content: '你是文学分析专家。请将以下多段摘要合并压缩为一段不超过500字的总结，保留关键情节、人物和精彩语句。' },
-          { role: 'user', content: groups[g] }
+      const condensed = await parallelMap(groups, async (group, g) => {
+        setProgress(Math.round(63 + (g / groups.length) * 2), `压缩第 ${g+1}/${groups.length} 组...`);
+        return callAI(config, [
+          { role: 'system', content: '将以下摘要合并压缩为不超过500字的总结，保留关键情节、人物和语句。' },
+          { role: 'user', content: group }
         ], 1024);
-        condensed.push(result);
-      }
+      }, config.concurrency);
+
       allSummaries = condensed.join('\n\n---\n\n');
     }
 
-    // ----- 模块1：全书概览 -----
-    setProgress(65, '正在生成全书概览...');
-    const overviewResult = await callAI(config, [
-      { role: 'system', content: '你是一位资深文学评论家。' },
-      { role: 'user', content: `以下是一本小说各部分的摘要。请生成"全书概览"：
+    // ===== 第4步：6大模块并行生成（带单模块容错） =====
+    setProgress(66, '正在并行生成六大模块...');
+
+    // 语录候选池文本
+    const topQuotes = quoteCandidates.slice(0, 30);
+    const quoteCandidateText = topQuotes.map(q => `"${q.quote}" —— ${q.position}`).join('\n');
+
+    const modulePrompts = {
+      overview: {
+        system: '你是一位资深文学评论家。',
+        user: `以下是一本小说各部分的摘要。请生成"全书概览"：
 1. 一句话总结全书内容
 2. 核心主旨
-
 总字数控制在100字以内，直接输出内容，不要加标题。
 
 各部分摘要：
-${allSummaries}` }
-    ]);
-    $('mod-overview').textContent = overviewResult;
+${allSummaries}`
+      },
+      plot: {
+        system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
+        user: `以下是一本小说各部分的摘要。请按"开端-发展-高潮-结局"四个阶段梳理情节脉络，每阶段约50字。
+JSON格式：{"开端":"...","发展":"...","高潮":"...","结局":"..."}
 
-    // ----- 模块2：情节脉络 -----
-    setProgress(72, '正在梳理情节脉络...');
-    const plotResult = await callAI(config, [
-      { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
-      { role: 'user', content: `以下是一本小说各部分的摘要。请按"开端-发展-高潮-结局"四个阶段梳理情节脉络，每阶段约50字。
+摘要：
+${allSummaries}`
+      },
+      characters: {
+        system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
+        user: `以下是一本小说各部分的摘要。列出前5个主要人物，每人附性格标签，并描述人物关系网。同时为每对有关系的人物标注关系类型。
+JSON格式：{"characters":[{"name":"姓名","trait":"性格标签"}],"relations":"关系描述","edges":[{"from":"人名A","to":"人名B","label":"关系"}]}
 
-请严格按以下JSON格式返回（不要加其他文字）：
-{"开端":"...","发展":"...","高潮":"...","结局":"..."}
+摘要：
+${allSummaries}`
+      },
+      quotes: {
+        system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
+        user: `以下是从一本小说各片段中独立提取的候选精彩语句。请从中精选最精彩的5句，附带出处。
+如果候选不足5句，从摘要内容补充。
 
-各部分摘要：
-${allSummaries}` }
-    ]);
-    renderPlot(plotResult);
+候选语录：
+${quoteCandidateText || '（无候选）'}
 
-    // ----- 模块3：人物图谱 -----
-    setProgress(79, '正在分析人物关系...');
-    const charResult = await callAI(config, [
-      { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
-      { role: 'user', content: `以下是一本小说各部分的摘要。请列出前5个主要人物，每人附一句性格标签，并在最后用一段文字描述人物之间的关系网。
+辅助摘要：
+${allSummaries}
 
-请严格按以下JSON格式返回（不要加其他文字）：
-{"characters":[{"name":"姓名","trait":"性格标签"}],"relations":"人物关系描述..."}
+JSON格式：[{"quote":"原句","source":"出处"}]`
+      },
+      insights: {
+        system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
+        user: `以下是一本小说各部分的摘要。请从三个维度各写一段点评（每段80-120字）：
+1. 写作手法  2. 社会隐喻  3. 情感共鸣
+JSON格式：{"writing":"...","metaphor":"...","emotion":"..."}
 
-各部分摘要：
-${allSummaries}` }
-    ]);
-    renderCharacters(charResult);
+摘要：
+${allSummaries}`
+      },
+      tags: {
+        system: '你是一位资深文学评论家。请严格按JSON格式回复，不要加其他文字。',
+        user: `以下是一本小说各部分的摘要。请生成10个关键词标签（每个2-4字）。
+JSON格式：["标签1","标签2",...]
 
-    // ----- 模块4：经典语录 -----
-    setProgress(85, '正在摘录经典语录...');
-    const quoteResult = await callAI(config, [
-      { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
-      { role: 'user', content: `以下是一本小说各部分的摘要（其中可能包含原文摘录）。请挑选全书最精彩的5句话，附带大致出处位置。
+摘要：
+${allSummaries}`
+      }
+    };
 
-请严格按以下JSON格式返回（不要加其他文字）：
-[{"quote":"原句","source":"出处（如：前半部分 / 中段 / 结尾等）"}]
+    const moduleNames = ['overview', 'plot', 'characters', 'quotes', 'insights', 'tags'];
 
-各部分摘要：
-${allSummaries}` }
-    ]);
-    renderQuotes(quoteResult);
+    // 并行发出6个模块请求
+    const modulePromises = moduleNames.map(async name => {
+      const p = modulePrompts[name];
+      try {
+        const result = await callAI(config, [
+          { role: 'system', content: p.system },
+          { role: 'user', content: p.user }
+        ], 2048);
+        return { name, result, error: null };
+      } catch (err) {
+        if (err.name === 'AbortError') throw err;
+        return { name, result: null, error: err.message };
+      }
+    });
 
-    // ----- 模块5：深度洞见 -----
-    setProgress(91, '正在撰写深度洞见...');
-    const insightResult = await callAI(config, [
-      { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
-      { role: 'user', content: `以下是一本小说各部分的摘要。请从以下三个维度各写一段点评（每段80-120字）：
-1. 写作手法
-2. 社会隐喻
-3. 情感共鸣
+    const results = await Promise.all(modulePromises);
+    setProgress(95, '正在渲染报告...');
 
-请严格按以下JSON格式返回（不要加其他文字）：
-{"writing":"...","metaphor":"...","emotion":"..."}
+    // 渲染各模块（带容错）
+    for (const r of results) {
+      moduleResults[r.name] = r;
+      if (r.error) {
+        renderModuleError(r.name, r.error, config, modulePrompts[r.name]);
+      } else {
+        renderModule(r.name, r.result);
+      }
+    }
 
-各部分摘要：
-${allSummaries}` }
-    ]);
-    renderInsights(insightResult);
-
-    // ----- 模块6：读者标签 -----
-    setProgress(96, '正在生成读者标签...');
-    const tagResult = await callAI(config, [
-      { role: 'system', content: '你是一位资深文学评论家。请严格按照指定JSON格式回复。' },
-      { role: 'user', content: `以下是一本小说各部分的摘要。请为本书自动生成10个关键词标签，每个标签2-4个字。
-
-请严格按以下JSON格式返回（不要加其他文字）：
-["标签1","标签2","标签3","标签4","标签5","标签6","标签7","标签8","标签9","标签10"]
-
-各部分摘要：
-${allSummaries}` }
-    ]);
-    renderTags(tagResult);
-
-    // ========== 完成 ==========
+    // ===== 完成 =====
     setProgress(100, '读书笔记生成完毕！');
+    lastReport.modules = moduleResults;
+    lastReport.allSummaries = allSummaries;
+    lastReport.quoteCandidates = quoteCandidates;
     reportSection.classList.add('active');
 
-    setTimeout(() => {
-      reportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 500);
+    saveHistory(lastReport);
+    renderHistory();
+
+    setTimeout(() => reportSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 500);
 
   } catch (err) {
     if (err.name === 'AbortError') {
-      setProgress(0, '已取消');
+      setProgress(0, '已取消生成');
     } else {
       showError('生成失败：' + err.message);
       setProgress(0, '生成失败');
     }
   } finally {
+    isGenerating = false;
     startBtn.disabled = false;
+    btnRow.style.display = 'flex';
+    cancelWrap.style.display = 'none';
     abortController = null;
   }
 });
 
 // ===========================================================================
-//  渲染函数
+//  模块渲染
+// ===========================================================================
+function renderModule(name, raw) {
+  switch (name) {
+    case 'overview': $('mod-overview').textContent = raw; break;
+    case 'plot': renderPlot(raw); break;
+    case 'characters': renderCharacters(raw); break;
+    case 'quotes': renderQuotes(raw); break;
+    case 'insights': renderInsights(raw); break;
+    case 'tags': renderTags(raw); break;
+  }
+}
+
+function renderModuleError(name, errMsg, config, prompt) {
+  const containerId = {
+    overview: 'mod-overview', plot: 'mod-plot', characters: 'mod-characters',
+    quotes: 'mod-quotes', insights: 'mod-insights', tags: 'mod-tags'
+  }[name];
+  const container = $(containerId);
+  container.innerHTML = `<div class="module-error">生成失败：${escapeHTML(errMsg)}<br>
+    <button onclick="retryModule('${name}')">点击重试</button></div>`;
+
+  window._retryData = window._retryData || {};
+  window._retryData[name] = { config, prompt };
+}
+
+window.retryModule = async function(name) {
+  const data = window._retryData?.[name];
+  if (!data) return;
+  const container = $({
+    overview:'mod-overview', plot:'mod-plot', characters:'mod-characters',
+    quotes:'mod-quotes', insights:'mod-insights', tags:'mod-tags'
+  }[name]);
+  container.innerHTML = '<div style="color:#8a7a66">重新生成中...</div>';
+  abortController = new AbortController();
+  try {
+    const result = await callAI(data.config, [
+      { role: 'system', content: data.prompt.system },
+      { role: 'user', content: data.prompt.user }
+    ], 2048);
+    renderModule(name, result);
+    if (lastReport?.modules) lastReport.modules[name] = { name, result, error: null };
+  } catch (err) {
+    container.innerHTML = `<div class="module-error">重试失败：${escapeHTML(err.message)}<br>
+      <button onclick="retryModule('${name}')">再试一次</button></div>`;
+  }
+};
+
+// ===========================================================================
+//  JSON 提取（健壮版：支持 markdown 代码块、前后文字干扰）
 // ===========================================================================
 function extractJSON(text) {
-  let cleaned = text.trim();
-  cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
-  return cleaned;
+  let s = text.trim();
+  // 去掉 markdown 代码块
+  s = s.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+
+  // 尝试直接解析
+  try { JSON.parse(s); return s; } catch {}
+
+  // 提取第一个 {...} 或 [...]
+  const objMatch = s.match(/\{[\s\S]*\}/);
+  const arrMatch = s.match(/\[[\s\S]*\]/);
+
+  if (objMatch && arrMatch) {
+    return objMatch.index < arrMatch.index ? objMatch[0] : arrMatch[0];
+  }
+  return objMatch ? objMatch[0] : (arrMatch ? arrMatch[0] : s);
 }
 
 function renderPlot(raw) {
-  const container = $('mod-plot');
+  const c = $('mod-plot');
   try {
-    const data = JSON.parse(extractJSON(raw));
-    const stages = [
-      { label: '开端', text: data['开端'] || '' },
-      { label: '发展', text: data['发展'] || '' },
-      { label: '高潮', text: data['高潮'] || '' },
-      { label: '结局', text: data['结局'] || '' }
-    ];
-    container.innerHTML = stages.map(s => `
-      <div class="plot-stage">
-        <div class="stage-label">${s.label}</div>
-        <div class="stage-text">${escapeHTML(s.text)}</div>
-      </div>
-    `).join('');
-  } catch {
-    container.textContent = raw;
-  }
+    const d = JSON.parse(extractJSON(raw));
+    c.innerHTML = [
+      { label: '开端', text: d['开端'] || '' },
+      { label: '发展', text: d['发展'] || '' },
+      { label: '高潮', text: d['高潮'] || '' },
+      { label: '结局', text: d['结局'] || '' }
+    ].map(s => `<div class="plot-stage"><div class="stage-label">${s.label}</div><div class="stage-text">${escapeHTML(s.text)}</div></div>`).join('');
+  } catch { c.textContent = raw; }
 }
 
 function renderCharacters(raw) {
-  const container = $('mod-characters');
+  const c = $('mod-characters');
   try {
-    const data = JSON.parse(extractJSON(raw));
+    const d = JSON.parse(extractJSON(raw));
     let html = '<table class="char-table"><tr><th>人物</th><th>性格标签</th></tr>';
-    (data.characters || []).forEach(c => {
-      html += `<tr><td>${escapeHTML(c.name)}</td><td>${escapeHTML(c.trait)}</td></tr>`;
+    (d.characters || []).forEach(ch => {
+      html += `<tr><td>${escapeHTML(ch.name)}</td><td>${escapeHTML(ch.trait)}</td></tr>`;
     });
     html += '</table>';
-    if (data.relations) {
-      html += `<p style="margin-top:12px;line-height:1.8;font-size:0.93rem;">${escapeHTML(data.relations)}</p>`;
+    if (d.relations) {
+      html += `<p style="margin-top:12px;line-height:1.8;font-size:0.93rem">${escapeHTML(d.relations)}</p>`;
     }
-    container.innerHTML = html;
-  } catch {
-    container.textContent = raw;
-  }
+    c.innerHTML = html;
+
+    // 绘制关系图
+    if (d.characters && d.edges) drawRelationGraph(d.characters, d.edges);
+    else $('relationCanvas').style.display = 'none';
+  } catch { c.textContent = raw; $('relationCanvas').style.display = 'none'; }
 }
 
 function renderQuotes(raw) {
-  const container = $('mod-quotes');
+  const c = $('mod-quotes');
   try {
-    const data = JSON.parse(extractJSON(raw));
-    container.innerHTML = data.map(q => `
-      <div class="quote-item">
-        “${escapeHTML(q.quote)}”
-        <span class="source">—— ${escapeHTML(q.source)}</span>
-      </div>
-    `).join('');
-  } catch {
-    container.textContent = raw;
-  }
+    const d = JSON.parse(extractJSON(raw));
+    c.innerHTML = d.map(q =>
+      `<div class="quote-item">"${escapeHTML(q.quote)}"<span class="source">—— ${escapeHTML(q.source)}</span></div>`
+    ).join('');
+  } catch { c.textContent = raw; }
 }
 
 function renderInsights(raw) {
-  const container = $('mod-insights');
+  const c = $('mod-insights');
   try {
-    const data = JSON.parse(extractJSON(raw));
-    const dims = [
-      { title: '写作手法', text: data.writing || '' },
-      { title: '社会隐喻', text: data.metaphor || '' },
-      { title: '情感共鸣', text: data.emotion || '' }
-    ];
-    container.innerHTML = dims.map(d => `
-      <div class="insight-block">
-        <h4>${d.title}</h4>
-        <p>${escapeHTML(d.text)}</p>
-      </div>
-    `).join('');
-  } catch {
-    container.textContent = raw;
-  }
+    const d = JSON.parse(extractJSON(raw));
+    c.innerHTML = [
+      { title: '写作手法', text: d.writing || '' },
+      { title: '社会隐喻', text: d.metaphor || '' },
+      { title: '情感共鸣', text: d.emotion || '' }
+    ].map(i => `<div class="insight-block"><h4>${i.title}</h4><p>${escapeHTML(i.text)}</p></div>`).join('');
+  } catch { c.textContent = raw; }
 }
 
 function renderTags(raw) {
-  const container = $('mod-tags');
+  const c = $('mod-tags');
   try {
-    const data = JSON.parse(extractJSON(raw));
-    container.innerHTML = '<div class="tags-wrap">' +
-      data.map(t => `<span class="tag">${escapeHTML(t)}</span>`).join('') +
-      '</div>';
-  } catch {
-    container.textContent = raw;
-  }
+    const d = JSON.parse(extractJSON(raw));
+    c.innerHTML = '<div class="tags-wrap">' + d.map(t => `<span class="tag">${escapeHTML(t)}</span>`).join('') + '</div>';
+  } catch { c.textContent = raw; }
 }
 
 function escapeHTML(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
 }
 
 // ===========================================================================
-//  页面初始化：恢复缓存配置
+//  人物关系图（Canvas 绘制）
+// ===========================================================================
+function drawRelationGraph(characters, edges) {
+  const canvas = $('relationCanvas');
+  canvas.style.display = 'block';
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const names = characters.map(c => c.name);
+  const count = names.length;
+  if (count === 0) return;
+
+  // 环形布局
+  const cx = W / 2, cy = H / 2;
+  const radius = Math.min(W, H) * 0.32;
+  const nodePositions = {};
+
+  names.forEach((name, i) => {
+    const angle = (2 * Math.PI * i / count) - Math.PI / 2;
+    nodePositions[name] = {
+      x: cx + radius * Math.cos(angle),
+      y: cy + radius * Math.sin(angle)
+    };
+  });
+
+  // 画连线和标签
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = '#c8a96e';
+  ctx.fillStyle = '#8a7a66';
+  ctx.font = '11px Georgia, serif';
+  ctx.textAlign = 'center';
+
+  (edges || []).forEach(e => {
+    const from = nodePositions[e.from];
+    const to = nodePositions[e.to];
+    if (!from || !to) return;
+
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.stroke();
+
+    const mx = (from.x + to.x) / 2;
+    const my = (from.y + to.y) / 2;
+    if (e.label) {
+      ctx.save();
+      ctx.fillStyle = '#faf7f0';
+      const tw = ctx.measureText(e.label).width + 8;
+      ctx.fillRect(mx - tw/2, my - 8, tw, 16);
+      ctx.fillStyle = '#a0927f';
+      ctx.fillText(e.label, mx, my + 4);
+      ctx.restore();
+    }
+  });
+
+  // 画节点
+  names.forEach((name, i) => {
+    const pos = nodePositions[name];
+    const trait = characters[i]?.trait || '';
+
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, 24, 0, Math.PI * 2);
+    ctx.fillStyle = '#fffdf7';
+    ctx.fill();
+    ctx.strokeStyle = '#c8a96e';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#5a4632';
+    ctx.font = 'bold 13px Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(name.length > 3 ? name.substring(0, 3) : name, pos.x, pos.y + 5);
+
+    ctx.fillStyle = '#a09080';
+    ctx.font = '10px Georgia, serif';
+    const shortTrait = trait.length > 6 ? trait.substring(0, 6) + '…' : trait;
+    ctx.fillText(shortTrait, pos.x, pos.y + 40);
+  });
+}
+
+// ===========================================================================
+//  导出功能
+// ===========================================================================
+$('exportMdBtn').addEventListener('click', () => {
+  if (!lastReport) return;
+  const md = generateMarkdown();
+  downloadFile(md, `${lastReport.title || '读书笔记'}.md`, 'text/markdown');
+});
+
+$('exportHtmlBtn').addEventListener('click', () => {
+  if (!lastReport) return;
+  const md = generateMarkdown();
+  const htmlContent = markdownToSimpleHtml(md, lastReport.title);
+  downloadFile(htmlContent, `${lastReport.title || '读书笔记'}.html`, 'text/html');
+});
+
+function generateMarkdown() {
+  const r = lastReport;
+  if (!r?.modules) return '';
+
+  let md = `# ${r.title || '读书笔记'}\n\n`;
+  md += `> 生成时间：${r.date}\n\n`;
+
+  // 概览
+  const ov = r.modules.overview;
+  md += `## 一、全书概览\n\n${ov?.result || ov?.error || ''}\n\n`;
+
+  // 情节
+  const pl = r.modules.plot;
+  if (pl?.result) {
+    try {
+      const d = JSON.parse(extractJSON(pl.result));
+      md += `## 二、情节脉络\n\n`;
+      md += `- **开端**：${d['开端'] || ''}\n`;
+      md += `- **发展**：${d['发展'] || ''}\n`;
+      md += `- **高潮**：${d['高潮'] || ''}\n`;
+      md += `- **结局**：${d['结局'] || ''}\n\n`;
+    } catch { md += `## 二、情节脉络\n\n${pl.result}\n\n`; }
+  }
+
+  // 人物
+  const ch = r.modules.characters;
+  if (ch?.result) {
+    try {
+      const d = JSON.parse(extractJSON(ch.result));
+      md += `## 三、人物图谱\n\n`;
+      md += `| 人物 | 性格标签 |\n| --- | --- |\n`;
+      (d.characters || []).forEach(c => { md += `| ${c.name} | ${c.trait} |\n`; });
+      if (d.relations) md += `\n${d.relations}\n\n`;
+    } catch { md += `## 三、人物图谱\n\n${ch.result}\n\n`; }
+  }
+
+  // 语录
+  const qt = r.modules.quotes;
+  if (qt?.result) {
+    try {
+      const d = JSON.parse(extractJSON(qt.result));
+      md += `## 四、经典语录\n\n`;
+      d.forEach((q, i) => { md += `${i+1}. "${q.quote}" —— ${q.source}\n`; });
+      md += '\n';
+    } catch { md += `## 四、经典语录\n\n${qt.result}\n\n`; }
+  }
+
+  // 洞见
+  const ins = r.modules.insights;
+  if (ins?.result) {
+    try {
+      const d = JSON.parse(extractJSON(ins.result));
+      md += `## 五、深度洞见\n\n`;
+      md += `### 写作手法\n${d.writing || ''}\n\n`;
+      md += `### 社会隐喻\n${d.metaphor || ''}\n\n`;
+      md += `### 情感共鸣\n${d.emotion || ''}\n\n`;
+    } catch { md += `## 五、深度洞见\n\n${ins.result}\n\n`; }
+  }
+
+  // 标签
+  const tg = r.modules.tags;
+  if (tg?.result) {
+    try {
+      const d = JSON.parse(extractJSON(tg.result));
+      md += `## 六、读者标签\n\n${d.map(t => `\`${t}\``).join('  ')}\n`;
+    } catch { md += `## 六、读者标签\n\n${tg.result}\n`; }
+  }
+
+  return md;
+}
+
+function markdownToSimpleHtml(md, title) {
+  let html = md
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/^\|(.+)\|$/gm, (m, content) => {
+      const cells = content.split('|').map(c => c.trim());
+      if (cells.every(c => /^-+$/.test(c))) return '';
+      return '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+    })
+    .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/\n\n/g, '</p><p>');
+
+  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>${title || '读书笔记'}</title>
+<style>body{max-width:700px;margin:40px auto;padding:0 20px;font-family:Georgia,serif;color:#3e3529;background:#f9f4e8;line-height:1.8}
+h1,h2,h3{color:#5a4632}h1{border-bottom:2px dashed #c8b890;padding-bottom:10px}
+blockquote{color:#8a7a66;border-left:3px solid #c8a96e;padding-left:14px;margin:10px 0}
+table{border-collapse:collapse;width:100%}td{padding:6px 12px;border-bottom:1px solid #e8dfcf}
+code{background:#f0e8d6;padding:2px 8px;border-radius:4px}li{margin:4px 0}</style>
+</head><body><p>${html}</p></body></html>`;
+}
+
+function downloadFile(content, filename, type) {
+  const blob = new Blob([content], { type: type + ';charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ===========================================================================
+//  历史记录（IndexedDB，降级到 localStorage）
+// ===========================================================================
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+  catch { return []; }
+}
+
+function saveHistory(report) {
+  const history = getHistory();
+  // 只保存摘要信息，不保存完整摘要文本以节省空间
+  const entry = {
+    id: Date.now(),
+    title: report.title,
+    date: report.date,
+    modules: {}
+  };
+  for (const [k, v] of Object.entries(report.modules || {})) {
+    entry.modules[k] = { name: v.name, result: v.result, error: v.error };
+  }
+  history.unshift(entry);
+  if (history.length > 20) history.length = 20;
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch {}
+}
+
+function renderHistory() {
+  const history = getHistory();
+  const section = $('historySection');
+  const list = $('historyList');
+  if (history.length === 0) { section.style.display = 'none'; return; }
+
+  section.style.display = 'block';
+  list.innerHTML = history.map(h => `
+    <li class="history-item" data-id="${h.id}">
+      <div class="info">
+        <div class="title">${escapeHTML(h.title || '未命名')}</div>
+        <div class="meta">${escapeHTML(h.date || '')}</div>
+      </div>
+      <div class="actions">
+        <button onclick="loadHistory(${h.id})">查看</button>
+        <button class="del" onclick="deleteHistory(${h.id});event.stopPropagation()">删除</button>
+      </div>
+    </li>
+  `).join('');
+}
+
+window.loadHistory = function(id) {
+  const history = getHistory();
+  const h = history.find(x => x.id === id);
+  if (!h) return;
+
+  lastReport = h;
+  for (const [name, data] of Object.entries(h.modules || {})) {
+    if (data.error) {
+      const containerId = { overview:'mod-overview', plot:'mod-plot', characters:'mod-characters',
+        quotes:'mod-quotes', insights:'mod-insights', tags:'mod-tags' }[name];
+      $(containerId).innerHTML = `<div class="module-error">该模块生成失败：${escapeHTML(data.error)}</div>`;
+    } else if (data.result) {
+      renderModule(name, data.result);
+    }
+  }
+  reportSection.classList.add('active');
+  reportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.deleteHistory = function(id) {
+  let history = getHistory();
+  history = history.filter(x => x.id !== id);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  renderHistory();
+};
+
+// ===========================================================================
+//  初始化
 // ===========================================================================
 loadConfig();
+updateProviderUI();
 checkReady();
+renderHistory();
 </script>
 </body>
 </html>
