@@ -524,6 +524,11 @@
       <div class="file-name" id="fileName"></div>
       <input type="file" id="fileInput" accept=".txt">
     </div>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:16px;cursor:pointer;user-select:none">
+      <input type="checkbox" id="limitText" style="width:auto;accent-color:#c8a96e;transform:scale(1.2)">
+      <span>只分析前 5 万字</span>
+      <span style="font-size:0.78rem;color:#a09080">（适合超长小说，节省 Token 开销）</span>
+    </label>
     <button class="btn btn-primary" id="startBtn" disabled>生 成 读 书 笔 记</button>
     <div class="error-msg" id="errorMsg"></div>
   </div>
@@ -617,6 +622,7 @@ const endpointHint   = $('endpointHint');
 const modelHint      = $('modelHint');
 const advancedToggle = $('advancedToggle');
 const advancedFields = $('advancedFields');
+const limitTextCb    = $('limitText');
 const fileInput      = $('fileInput');
 const uploadZone     = $('uploadZone');
 const fileNameEl     = $('fileName');
@@ -642,6 +648,7 @@ function loadConfig() {
     if (saved.apiKey) apiKeyInput.value = saved.apiKey;
     if (saved.endpoint) apiEndpointInput.value = saved.endpoint;
     if (saved.model) modelNameInput.value = saved.model;
+    if (saved.limitText) limitTextCb.checked = saved.limitText;
     // 如果有高级设置内容，自动展开
     if (saved.endpoint || saved.model) {
       advancedToggle.classList.add('open');
@@ -657,7 +664,8 @@ function saveConfig() {
     provider: apiProviderSel.value,
     apiKey: apiKeyInput.value.trim(),
     endpoint: apiEndpointInput.value.trim(),
-    model: modelNameInput.value.trim()
+    model: modelNameInput.value.trim(),
+    limitText: limitTextCb.checked
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
 }
@@ -690,6 +698,7 @@ advancedToggle.addEventListener('click', () => {
 apiKeyInput.addEventListener('input', () => { saveConfig(); checkReady(); });
 apiEndpointInput.addEventListener('input', saveConfig);
 modelNameInput.addEventListener('input', saveConfig);
+limitTextCb.addEventListener('change', saveConfig);
 
 // ===========================================================================
 //  获取当前生效的配置
@@ -949,40 +958,84 @@ startBtn.addEventListener('click', async () => {
   abortController = new AbortController();
 
   try {
+    // ========== 第0步：如果开启了5万字限制，截断文本 ==========
+    let textToAnalyze = uploadedText;
+    const TEXT_LIMIT = 50000;
+    if (limitTextCb.checked && textToAnalyze.length > TEXT_LIMIT) {
+      // 在5万字附近找到句末标点截断，避免切在句子中间
+      let cutAt = TEXT_LIMIT;
+      for (let i = TEXT_LIMIT; i < Math.min(TEXT_LIMIT + 500, textToAnalyze.length); i++) {
+        if (/[。！？…\.]/.test(textToAnalyze[i])) { cutAt = i + 1; break; }
+      }
+      textToAnalyze = textToAnalyze.substring(0, cutAt);
+      setProgress(2, `已截取前 ${(cutAt / 10000).toFixed(1)} 万字进行分析...`);
+    }
+
     // ========== 第1步：智能分块 ==========
     setProgress(5, '正在对全文进行智能分块...');
-    const chunks = smartChunk(uploadedText);
+    const chunks = smartChunk(textToAnalyze);
     const totalChunks = chunks.length;
     setProgress(10, `全文已分为 ${totalChunks} 个语义块，开始逐块分析...`);
 
-    // ========== 第2步：逐块提取摘要 ==========
+    // ========== 第2步：逐块提取摘要（要求简短，控制总量） ==========
     const summaries = [];
     for (let i = 0; i < totalChunks; i++) {
       const chunkIndex = i + 1;
       const chunkProgress = Math.round(10 + (i / totalChunks) * 50);
       setProgress(chunkProgress, `正在分析第 ${chunkIndex}/${totalChunks} 个文本块...`);
 
-      const prompt = `你是一位专业的文学分析助手。以下是一本小说中的第 ${chunkIndex}/${totalChunks} 段内容。
-请提取以下要点，用精炼的中文回答：
-1. 本段的主要情节概述（100字左右）
-2. 出现的主要人物及其行为
-3. 值得关注的精彩语句（如有，请原文摘录）
-4. 本段体现的主题或情感基调
+      const prompt = `以下是一本小说中的第 ${chunkIndex}/${totalChunks} 段内容。请用不超过200字精炼总结：
+1. 情节概述（50字）
+2. 主要人物及行为（30字）
+3. 精彩语句（如有，摘录1句原文）
+4. 情感基调（10字）
+
+严格控制总字数在200字以内。
 
 原文内容：
 ${chunks[i]}`;
 
       const summary = await callAI(config, [
-        { role: 'system', content: '你是一位资深文学评论家和读书笔记专家。请用简洁、精炼的中文回答。' },
+        { role: 'system', content: '你是读书笔记专家。请极度精炼，总回复不超过200字。' },
         { role: 'user', content: prompt }
-      ]);
+      ], 1024);
 
-      summaries.push(`【第${chunkIndex}块摘要】\n${summary}`);
+      summaries.push(`【第${chunkIndex}块】${summary}`);
     }
 
-    // ========== 第3步：汇总生成六大模块 ==========
-    setProgress(62, '所有文本块分析完毕，正在生成全书概览...');
-    const allSummaries = summaries.join('\n\n---\n\n');
+    // ========== 第3步：摘要压缩（防止超出上下文窗口） ==========
+    // 如果所有摘要拼接后超过6000字，分批再压缩一轮
+    setProgress(62, '所有文本块分析完毕，正在压缩汇总...');
+    const MAX_SUMMARY_LENGTH = 6000;
+    let allSummaries = summaries.join('\n\n');
+
+    if (allSummaries.length > MAX_SUMMARY_LENGTH) {
+      setProgress(63, `摘要总量 ${(allSummaries.length/10000).toFixed(1)} 万字，正在二次压缩...`);
+      // 将摘要分成若干组，每组不超过 MAX_SUMMARY_LENGTH 字，逐组压缩
+      const groups = [];
+      let currentGroup = '';
+      for (const s of summaries) {
+        if (currentGroup.length + s.length + 2 > MAX_SUMMARY_LENGTH && currentGroup) {
+          groups.push(currentGroup);
+          currentGroup = s;
+        } else {
+          currentGroup += (currentGroup ? '\n\n' : '') + s;
+        }
+      }
+      if (currentGroup) groups.push(currentGroup);
+
+      const condensed = [];
+      for (let g = 0; g < groups.length; g++) {
+        const gProgress = Math.round(63 + (g / groups.length) * 2);
+        setProgress(gProgress, `正在压缩第 ${g + 1}/${groups.length} 组摘要...`);
+        const result = await callAI(config, [
+          { role: 'system', content: '你是文学分析专家。请将以下多段摘要合并压缩为一段不超过500字的总结，保留关键情节、人物和精彩语句。' },
+          { role: 'user', content: groups[g] }
+        ], 1024);
+        condensed.push(result);
+      }
+      allSummaries = condensed.join('\n\n---\n\n');
+    }
 
     // ----- 模块1：全书概览 -----
     setProgress(65, '正在生成全书概览...');
